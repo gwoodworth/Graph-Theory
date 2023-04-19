@@ -1,0 +1,359 @@
+\documentclass[12pt]{article}
+
+\usepackage{amssymb,amsmath,amsthm}
+\usepackage[top=1in, bottom=1in, left=1.25in, right=1.25in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{enumerate}
+\usepackage{color}
+\usepackage{quiver}
+\usepackage{blkarray}
+\usepackage{subcaption}
+%% Import a package useful for displaying graphics.
+\usepackage{graphicx}
+\usepackage{quiver}
+
+% Comment the following line to use TeX's default font of Computer Modern.
+\usepackage{times,txfonts}
+
+% Adjust line spacing an indentation
+\parindent 0pt
+\parskip 6pt plus 1pt
+
+\newtheoremstyle{ex215}% name of the style to be used
+  {18pt}% measure of space to leave above the theorem. E.g.: 3pt
+  {12pt}% measure of space to leave below the theorem. E.g.: 3pt
+  {}% name of font to use in the body of the theorem
+  {}% measure of space to indent
+  {\bfseries}% name of head font
+  {:}% punctuation between head and body
+  {2ex}% space after theorem head; " " = normal interword space
+  {}% Manually specify head
+\theoremstyle{ex215} 
+
+\makeatletter
+\newtheorem*{lemmacore}{Lemma \@currentlabel}
+\newenvironment{lemma}[1]
+{\def\@currentlabel{#1}\lemmacore}
+{\endlemmacore}
+
+\newtheorem*{corollarycore}{Corollary \@currentlabel}
+\newenvironment{corollary}[1]
+{\def\@currentlabel{#1}\corollarycore}
+{\endcorollarycore}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Stuff for getting the name/document date/title across the header
+\RequirePackage{fancyhdr}
+\pagestyle{fancy}
+\fancyfoot[C]{\ifnum \value{page} > 1\relax\thepage\fi}
+\fancyhead[L]{\ifx\@doclabel\@empty\else\@doclabel\fi}
+\fancyhead[C]{\ifx\@docauthor\@empty\else\@docdate\fi}
+\fancyhead[R]{\ifx\@docauthor\@empty\@docdate\else\@docauthor\fi}
+\headheight 15pt
+
+
+\def\doclabel#1{\gdef\@doclabel{#1}}
+\doclabel{Use {\tt\textbackslash doclabel\{MY LABEL\}}.}
+\def\docdate#1{\gdef\@docdate{#1}}
+\docdate{Use {\tt\textbackslash docdate\{MY DATE\}}.}
+\def\docauthor#1{\gdef\@docauthor{#1}}
+%\docauthor{Use {\tt\textbackslash docauthor\{MY NAME\}}.}
+\let\@docauthor\@empty
+
+\newcounter{probcount}
+\newcounter{subprobcount}
+\newlength\probsep
+\newlength\pshrinking
+\newif\iffirstprob
+
+% The following commands allow for a handy override of labels in an enumeration,
+% without having the user keep track of what level the enumeration is happening at.
+% To use them, just put \listlabel{....} as the first command after a \begin{enumerate}.
+% The '....' is used to define the label.  You can access the name of the current label
+% counter with \thelistlabel.  Hence \listlabel{\textbf{\Alph{\thelistlabel}:}} would
+% generate lists with bold labels A:, B:, C:, etc.
+\newcommand{\listlabel}[1]{\def\thelistlabel{\@enumctr}%
+            \expandafter\def\csname label\@enumctr\endcsname{#1}}
+
+
+\newenvironment{subproblems}%
+  {\begin{enumerate}\listlabel{\alph{\thelistlabel})}%
+  %% Make the enumerate environment think we are making a list in a list:
+  \global \@newlistfalse}%
+  {\end{enumerate}}%
+
+\newenvironment{problems}%
+  {\ifhmode\unskip\par\fi\setcounter{probcount}{0}\probsep\parskip
+  \sbox\@tempboxa{\textbf{9.}}\pshrinking\wd\@tempboxa\advance\pshrinking\labelsep
+  \advance\linewidth -\pshrinking
+  \advance\@totalleftmargin\pshrinking
+  \advance\leftskip\pshrinking}%
+  {\ifhmode\unskip \par\fi\advance\leftskip-\pshrinking}%
+
+\newcommand{\problem}{%
+  \setcounter{subprobcount}{0}%
+  \stepcounter{probcount}%
+  \def\@currentlabel{\arabic{probcount}}%
+  \ifhmode
+    \unskip \par
+  \fi
+%  \addpenalty{-4000}%
+  \iffirstprob\else\addvspace\probsep\fi
+  \firstprobfalse
+  \hskip -\labelwidth\hskip -\labelsep 
+  \hbox to\labelwidth{\hss\textbf{\arabic{probcount}.}}\hskip\labelsep
+}%
+
+%% The localhead command puts a label on top of a paragraph -- handy for labels
+%% like "Solution:"
+\newskip\restoreparskip
+\newcommand{\localhead}[1]{\par\smallskip\textbf{#1}\nobreak\\}%
+%% The following arcane code was added to make the localhead enviroment get along
+%% with the ams theorem enviroment (which is based on the latex list enviroment).
+%% previously, the command was {\par\smallskip\textbf{#1}\\}, but the list
+%% enviroment would also add a par at the end of this paragraph, which would result
+%% in an extra blank line.  Our solution now is to put in our own par, but with
+%% none of the parskip glue that adds extra space between paragraphs.
+%%  \restoreparskip\parskip\parskip 0pt\par\nobreak\noindent\parskip\restoreparskip}%
+\newcommand\solution{\localhead{Solution:}}
+\newcommand\subsol{\stepcounter{subprobcount}\localhead{Solution, part \alph{subprobcount}:}}
+\newcommand\subsoleg[1]{\stepcounter{subprobcount}\par\textbf{Solution, part \alph{subprobcount}:} #1\\}
+\def\solver#1{(Solution by #1)\\\vskip-12pt}
+
+
+%% The default 'article' class has captions that label figures Figure 1, etc.  This is too 
+%% formal for homework sets, so we change \caption so that it just puts the caption text.
+%% Here I have just modified the \@makecaption command from the article class.
+%% Maybe I should change this in the future to let authors decide whether or not to label a figure.
+
+\long\def\@makecaption#1#2{%
+  \vskip\abovecaptionskip
+  \sbox\@tempboxa{#2}%
+  \ifdim \wd\@tempboxa >\hsize
+    #2\par
+  \else
+    \global \@minipagefalse
+    \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
+  \fi
+  \vskip\belowcaptionskip}
+
+%% The default implementation of the proof environment starts a new paragraph at the start of the proof,
+%% with the full parskip spacing. This only looks good following a theorem statement 
+%% if \parskip is set to zero.  We've got a medium sized parskip, so we overide this 
+%% questionable decision.
+\renewenvironment{proof}[1][\proofname]{\par
+  \pushQED{\qed}%
+  \normalfont \topsep6\p@\@plus6\p@\relax
+  \trivlist
+  \@topsep \topsep
+  \item[\hskip\labelsep
+        \itshape
+    #1\@addpunct{.}]\ignorespaces
+}{%
+  \popQED\endtrivlist\@endpefalse
+}
+\makeatother
+
+% Shortcuts for blackboard bold number sets (reals, integers, etc.)
+\newcommand{\Reals}{\ensuremath{\mathbb R}}
+\newcommand{\Nats}{\ensuremath{\mathbb N}}
+\newcommand{\Ints}{\ensuremath{\mathbb Z}}
+\newcommand{\Rats}{\ensuremath{\mathbb Q}}
+\newcommand{\Cplx}{\ensuremath{\mathbb C}}
+%% Some equivalents that some people may prefer.
+\let\RR\Reals
+\let\NN\Nats
+\let\II\Ints
+\let\CC\Cplx
+
+
+% The following commands set up the material that appears
+% in the header.
+\doclabel{Math 663: HW 8}
+\docauthor{Glen Woodworth}
+\docdate{26 October 2021}
+
+\begin{document}
+\begin{problems}
+
+\problem 3.1.1. Find a maximum matching in each graph below. Prove that it is a maximum matching by exhibiting an optimal solution to the dual problem (minimum vertex cover). Explain why this proves that the matching is optimal.
+\begin{subproblems}
+\item % https://q.uiver.app/?q=WzAsOSxbMSwwLCJhXFxidWxsZXQiXSxbMiwyLCJnXFxidWxsZXQiXSxbMiwwLCJiXFxidWxsZXQiXSxbMywwLCJjXFxidWxsZXQiXSxbNCwwLCJkXFxidWxsZXQiXSxbMCwyLCJlXFxidWxsZXQiXSxbMSwyLCJmXFxidWxsZXQiXSxbMywyLCJoXFxidWxsZXQiXSxbNCwyLCJpXFxidWxsZXQiXSxbMCwxLCIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzIsMSwiIiwyLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFszLDEsIiIsMix7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbNCwxLCIiLDIseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzUsMywiIiwyLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs2LDMsIiIsMix7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbNyw0LCIiLDIseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzgsNCwiIiwyLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs4LDMsIiIsMix7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbNiw0LCIiLDIseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV1d
+\[\begin{tikzcd}
+	& a\bullet & b\bullet & c\bullet & d\bullet \\
+	\\
+	e\bullet & f\bullet & g\bullet & h\bullet & i\bullet
+	\arrow[no head, from=1-2, to=3-3]
+	\arrow[no head, from=1-3, to=3-3]
+	\arrow[no head, from=1-4, to=3-3]
+	\arrow[no head, from=1-5, to=3-3]
+	\arrow[no head, from=3-1, to=1-4]
+	\arrow[no head, from=3-2, to=1-4]
+	\arrow[no head, from=3-4, to=1-5]
+	\arrow[no head, from=3-5, to=1-5]
+	\arrow[no head, from=3-5, to=1-4]
+	\arrow[no head, from=3-2, to=1-5]
+\end{tikzcd}\]
+\item % https://q.uiver.app/?q=WzAsMTAsWzEsMCwiYlxcYnVsbGV0Il0sWzIsMCwiY1xcYnVsbGV0Il0sWzMsMCwiZFxcYnVsbGV0Il0sWzQsMCwiZVxcYnVsbGV0Il0sWzAsMiwiZlxcYnVsbGV0Il0sWzEsMiwiZ1xcYnVsbGV0Il0sWzIsMiwiaFxcYnVsbGV0Il0sWzMsMiwiaVxcYnVsbGV0Il0sWzQsMiwialxcYnVsbGV0Il0sWzAsMCwiYVxcYnVsbGV0Il0sWzAsNiwiIiwyLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs1LDEsIiIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbOSw1LCIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzUsMywiIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs5LDYsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMiw2LCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzIsNywiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFszLDYsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbOCwyLCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzQsMiwiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dXQ==
+\[\begin{tikzcd}
+	a\bullet & b\bullet & c\bullet & d\bullet & e\bullet \\
+	\\
+	f\bullet & g\bullet & h\bullet & i\bullet & j\bullet
+	\arrow[no head, from=1-2, to=3-3]
+	\arrow[no head, from=3-2, to=1-3]
+	\arrow[no head, from=1-1, to=3-2]
+	\arrow[no head, from=3-2, to=1-5]
+	\arrow[no head, from=1-1, to=3-3]
+	\arrow[no head, from=1-4, to=3-3]
+	\arrow[no head, from=1-4, to=3-4]
+	\arrow[no head, from=1-5, to=3-3]
+	\arrow[no head, from=3-5, to=1-4]
+	\arrow[no head, from=3-1, to=1-4]
+\end{tikzcd}\]
+\item% https://q.uiver.app/?q=WzAsMTAsWzEsMCwiYlxcYnVsbGV0Il0sWzIsMCwiY1xcYnVsbGV0Il0sWzMsMCwiZFxcYnVsbGV0Il0sWzQsMCwiZVxcYnVsbGV0Il0sWzAsMiwiZlxcYnVsbGV0Il0sWzEsMiwiZ1xcYnVsbGV0Il0sWzIsMiwiaFxcYnVsbGV0Il0sWzMsMiwiaVxcYnVsbGV0Il0sWzQsMiwialxcYnVsbGV0Il0sWzAsMCwiYVxcYnVsbGV0Il0sWzAsNiwiIiwyLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs1LDEsIiIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbOSw1LCIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzUsMywiIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFsyLDcsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbOCwyLCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzQsMiwiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs5LDcsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMCw0LCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzAsNSwiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFswLDcsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMSw3LCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzIsNSwiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFszLDcsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XV0=
+\[\begin{tikzcd}
+	a\bullet & b\bullet & c\bullet & d\bullet & e\bullet \\
+	\\
+	f\bullet & g\bullet & h\bullet & i\bullet & j\bullet
+	\arrow[no head, from=1-2, to=3-3]
+	\arrow[no head, from=3-2, to=1-3]
+	\arrow[no head, from=1-1, to=3-2]
+	\arrow[no head, from=3-2, to=1-5]
+	\arrow[no head, from=1-4, to=3-4]
+	\arrow[no head, from=3-5, to=1-4]
+	\arrow[no head, from=3-1, to=1-4]
+	\arrow[no head, from=1-1, to=3-4]
+	\arrow[no head, from=1-2, to=3-1]
+	\arrow[no head, from=1-2, to=3-2]
+	\arrow[no head, from=1-2, to=3-4]
+	\arrow[no head, from=1-3, to=3-4]
+	\arrow[no head, from=1-4, to=3-2]
+	\arrow[no head, from=1-5, to=3-4]
+\end{tikzcd}\]
+\end{subproblems}
+\solution
+Each of the graphs above are bipartite. Hence, by the Konig Egavary Theorem, the amount of edges in a maximum matching is the same size as the number of vertices in a minimum vertex cover.  The following solutions are all optimal because the cardinality of each vertex cover is the same as the cardinality of each matching. 
+\subsol Minimum vertex cover has 3 vertices, such as $c,d,g$. Example of a maximum matching on those vertices:
+% https://q.uiver.app/?q=WzAsOSxbMSwwLCJcXGJ1bGxldCJdLFsyLDIsImdcXGJ1bGxldCJdLFsyLDAsIlxcYnVsbGV0Il0sWzMsMCwiY1xcYnVsbGV0Il0sWzQsMCwiZFxcYnVsbGV0Il0sWzAsMiwiXFxidWxsZXQiXSxbMSwyLCJcXGJ1bGxldCJdLFszLDIsIlxcYnVsbGV0Il0sWzQsMiwiXFxidWxsZXQiXSxbMCwxLCIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzUsMywiIiwyLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs0LDcsIiIsMix7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XV0=
+\[\begin{tikzcd}
+	& \bullet & \bullet & c\bullet & d\bullet \\
+	\\
+	\bullet & \bullet & g\bullet & \bullet & \bullet
+	\arrow[no head, from=1-2, to=3-3]
+	\arrow[no head, from=3-1, to=1-4]
+	\arrow[no head, from=1-5, to=3-4]
+\end{tikzcd}\]
+\subsol Minimum vertex cover has 3 vertices, such as $d,g,h$. Example of a maximum matching:
+% https://q.uiver.app/?q=WzAsMTAsWzEsMCwiXFxidWxsZXQiXSxbMiwwLCJcXGJ1bGxldCJdLFszLDAsImRcXGJ1bGxldCJdLFs0LDAsIlxcYnVsbGV0Il0sWzAsMiwiXFxidWxsZXQiXSxbMSwyLCJnXFxidWxsZXQiXSxbMiwyLCJoXFxidWxsZXQiXSxbMywyLCJcXGJ1bGxldCJdLFs0LDIsIlxcYnVsbGV0Il0sWzAsMCwiXFxidWxsZXQiXSxbNSwxLCIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzMsNiwiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs4LDIsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XV0=
+\[\begin{tikzcd}
+	\bullet & \bullet & \bullet & d\bullet & \bullet \\
+	\\
+	\bullet & g\bullet & h\bullet & \bullet & \bullet
+	\arrow[no head, from=3-2, to=1-3]
+	\arrow[no head, from=1-5, to=3-3]
+	\arrow[no head, from=3-5, to=1-4]
+\end{tikzcd}\]
+\subsol Minimum vertex cover has 3 vertices, such as $b,d,g$. Example of a maximum matching on those vertices:
+% https://q.uiver.app/?q=WzAsMTAsWzEsMCwiYlxcYnVsbGV0Il0sWzIsMCwiXFxidWxsZXQiXSxbMywwLCJkXFxidWxsZXQiXSxbNCwwLCJcXGJ1bGxldCJdLFswLDIsIlxcYnVsbGV0Il0sWzEsMiwiZ1xcYnVsbGV0Il0sWzIsMiwiXFxidWxsZXQiXSxbMywyLCJcXGJ1bGxldCJdLFs0LDIsIlxcYnVsbGV0Il0sWzAsMCwiXFxidWxsZXQiXSxbMCw2LCIiLDIseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzksNSwiIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs0LDIsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XV0=
+\[\begin{tikzcd}
+	\bullet & b\bullet & \bullet & d\bullet & \bullet \\
+	\\
+	\bullet & g\bullet & \bullet & \bullet & \bullet
+	\arrow[no head, from=1-2, to=3-3]
+	\arrow[no head, from=1-1, to=3-2]
+	\arrow[no head, from=3-1, to=1-4]
+\end{tikzcd}\]
+
+\problem 3.1.3. Let $S$ be the set of vertices saturated by a matching $M$ in a graph $G$. Prove that some maximum matching also saturates all of $S$. Must the statement be true for every maximum matching?
+\solution If $M$ is maximum, then we are done. Otherwise, suppose $M$ is not maximum. By Theorem 3.1.10., this implies that $G$ has an $M$-augmenting path p. Let $M'$ be a matching including all of M except that M' includes the maximum matching on p. Then $V(M')\supset V(M)$. Hence, if $M'$ is a maximum matching, we are done. Otherwise, apply Theorem 3.1.10. again and apply the same argument to find a larger matching $M''$ such that $V(M'')\supset V(M')\supset V(M)$. This algorithm always produces a matching that saturates $S$. It will end when a maximum matching is found. The statement may not be true for every maximum matching. In the graph below, $S=\{a,b,c,d\}$. Consider matching $M=\{ab,cd\}$. $M$ is a maximum matching. Yet, $M'=\{ac,be\}$ is a maximum matching that does not saturate all of $S$, namely $M'$ does not saturate $e$.
+%https://q.uiver.app/?q=WzAsNSxbMSwwLCJiXFxidWxsZXQiXSxbMCwxLCJhXFxidWxsZXQiXSxbMiwxLCJjXFxidWxsZXQiXSxbMywwLCJlXFxidWxsZXQiXSxbMywxLCJkXFxidWxsZXQiXSxbMSwwLCIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzAsMiwiIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFsyLDEsIiIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMCwzLCIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzIsNCwiIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFszLDQsIiIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XV0=
+\[\begin{tikzcd}
+	& b\bullet && e\bullet \\
+	a\bullet && c\bullet & d\bullet
+	\arrow[no head, from=2-1, to=1-2]
+	\arrow[no head, from=1-2, to=2-3]
+	\arrow[no head, from=2-3, to=2-1]
+	\arrow[no head, from=1-2, to=1-4]
+	\arrow[no head, from=2-3, to=2-4]
+	\arrow[no head, from=1-4, to=2-4]
+\end{tikzcd}\] \qed
+\problem 3.1.19. Let $\textbf{A}=(A_1,\dots ,A_m)$ be a collection of subsets of a set $Y$. A \textbf{system of distinct representatives} (SDR) for \textbf{A} is a set of distinct elements $a_1,\dots ,a_m$ in $Y$ such that $a_i\in A_i$. Prove that \textbf{A} has an SDR if and only if $|\cup_{i\in S}A_i|\ge |S|$ for every $S\subseteq\{1,\dots ,m\}$. (Hint: Transform this to a graph problem.)
+\solution
+We can represent the SDR by an \textbf{A}-$Y$ bipartite graph such that for all $A_i\in\textbf{A}$, $A_i\leftrightarrow y_j,y_j\in Y$ if and only if $y_j\in A_i$. Hence, by Hall's Matching Theorem, \textbf{A} has an SDR if and only if $|\cup_{i\in S}A_i|$ for every $R\subseteq X$, $|R|\le |N(R)|$.Observe,
+\begin{align*}
+\forall R\subseteq X, |R|\le |N(R)|&\leftrightarrow\forall R\subseteq X, |R|\le |\cup_{i\in R}A_i|\\
+&\leftrightarrow\forall S\subseteq[m], |S|=|R|\le |\cup{i\in S}A_i|
+\end{align*}
+\qed
+\problem 3.1.21. Let $G$ be an $X,Y$-bigraph such that $|N(S)|>|S|$ whenever $\O\ne S\subset X$. Prove that every edge of $G$ belongs to some matching that saturates $X$.
+\solution
+Let $xy\in E(G)$. Consider $G'=G-x-y$. Let $S'\subset V(G')\cap X$. Then $S'\subset X$. By assumption $|S|<|N_G(S)|$. Thus, $|N_G'(S')|\ge |S'|$. Hence, there exists a matching in $G'$ saturating $X-x$, which means $G$ has a matching saturating $X$ using the edge $xy$.
+\qed
+\problem 3.2.1. Using nonnegative edge weights, construct a 4-vertex weighted graph in which the matching of maximum weight is not a matching of maximum size.
+\solution In the graph below, the matching including only the edge with weight 8 has maximum weight, but there are larger matchings (a matching including the edges with weights 4 and 3, for example).
+% https://q.uiver.app/?q=WzAsNSxbMCwxLCJcXGJ1bGxldCJdLFsxLDBdLFsyLDAsIlxcYnVsbGV0Il0sWzIsMiwiXFxidWxsZXQiXSxbMCwyLCJcXGJ1bGxldCJdLFswLDIsIjEiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzIsMywiOCIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbNCwyLCI0IiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFszLDQsIjIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzMsMCwiMyIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XV0=
+\[\begin{tikzcd}
+	& {} & \bullet \\
+	\bullet \\
+	\bullet && \bullet
+	\arrow["1", no head, from=2-1, to=1-3]
+	\arrow["8", no head, from=1-3, to=3-3]
+	\arrow["4"{description}, no head, from=3-1, to=1-3]
+	\arrow["2"{description}, no head, from=3-3, to=3-1]
+	\arrow["3"{description}, no head, from=3-3, to=2-1]
+\end{tikzcd}\]
+\problem 3.2.5a. Find a transversal of maximum total sum (weight) in the matrix below. Prove that there is no larger weight transversal by exhibiting a solution to the dual problem. Explain why this proves that there is no larger transversal.
+\[
+A=\left(\begin{matrix}
+4&4&4&3&6\\
+1&1&4&3&4\\
+1&4&5&3&5\\
+5&6&4&7&9\\
+5&3&6&8&3
+\end{matrix}\right)
+\]
+\solution
+The Hungarian Algorithm applied to this problem produces:
+\[
+\begin{matrix}
+&&0&1&2&1&2\\
+\\
+4&&\underline{0}&1&2&2&0\\
+2&&1&2&\underline{0}&0&0\\
+3&&2&\underline{0}&0&1&0\\
+7&&2&2&5&1&\underline{0}\\
+7&&2&5&3&\underline{0}&6
+\end{matrix}
+\]
+Hence, the sum of the maximum weight transversal is
+\[
+a_{11}+a_{23}+a_{32}+a_{45}+a_{54}=9+8+4+4+4=29.
+\]
+We also find the sum of the minimum cover by summing up the values on the edge of the output of the algorithm:
+\[
+4+2+3+7+7+0+1+2+1+2=29.
+\]
+Since the sum of the minimum cover is equal to the sum of the maximum weight transversal, by Lemma 3.2.7. the solution must be optimal. 
+\qed
+\problem 3.2.7. \textit{The Bus Driver Problem.} Let there be $n$ bus drivers, $n$ morning routes with durations $x_1,\dots ,x_n$, and $n$ afternoon routes with durations $y_1,\dots ,y_n$. A driver is paid overtime when the morning route and afternoon route exceed total time $t$. The objective is to assign one morning run and one afternoon run to each driver to minimize the total amount of overtime. Express this as a weighted matching problem. Prove that giving the $i$th longest morning route and $i$th shortest afternoon route to the same driver, for each $i$, yields an optimal solution. (Hint: Do not use the Hungarian Algorithm; consider the special structure of the matrix.) (R.B. Potts)
+\solution 
+Let each route be a vertex. The duration of a route is the weight of its vertex. Since we are only interested in the amount of overtime, we represent this problem using a matrix of edge weights minus $t$. Consider the matrix below where the $x_i$ are in non-increasing order and each entry $a_{ii}$, is the amount of overtime driver $i$ has.
+\[\begin{matrix}
+&y_1&y_2&y_3&\dots &y_n\\
+x_1&\max\{x_1+y_1-t,0\}\\
+x_2&&\max\{x_2+y_2-t,0\}\\
+x_3&&&\max\{x_3+y_3-t,0\}\\
+\dots\\
+x_n&&&&&\max\{x_n+y_n-t,0\}
+\end{matrix}
+\]
+Since we set the order of the $x_i$, the goal is to arrange the $y_i$ so that for every $x_i$ and $y_i$,
+\[
+a_{ii}=\max\{x_i+y_i-t,0\}
+\]
+is minimized. Whenever $x_i+y_i\le t$, $a_{ii}=0$. The goal is for each $a_{ii}$ to be as close to 0 as possible. We iteratively choose a partner for each $x_i$, starting with the largest, $x_1$, because this route has the potential for the largest amount of overtime. The optimal choice is the smallest $y_i$, call it $y_{s_1}$. We now move on to the second largest $x_i$, $x_2$. The same rule applies: the best choice is the smallest $y_i$. Yet, since we already used $y_{s_1}$, the best we can do is the second smallest, $y_{s_2}$. This continues until we reach $x_n$, at which point the only $y_i$ left will be the largest one. Hence, giving the $i$th longest morning route and the $i$th shortest afternoon route to the same driver, for each $i$, yields an optimal solution.
+\qed
+\end{problems}
+\end{document}

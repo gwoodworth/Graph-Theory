@@ -1,0 +1,226 @@
+\documentclass[12pt]{article}
+
+\usepackage{amssymb,amsmath,amsthm}
+\usepackage[top=1in, bottom=1in, left=1.25in, right=1.25in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{enumerate}
+\usepackage{color}
+\usepackage{quiver}
+\usepackage{blkarray}
+\usepackage{subcaption}
+%% Import a package useful for displaying graphics.
+\usepackage{graphicx}
+\usepackage{quiver}
+
+% Comment the following line to use TeX's default font of Computer Modern.
+\usepackage{times,txfonts}
+
+% Adjust line spacing an indentation
+\parindent 0pt
+\parskip 6pt plus 1pt
+
+\newtheoremstyle{ex215}% name of the style to be used
+  {18pt}% measure of space to leave above the theorem. E.g.: 3pt
+  {12pt}% measure of space to leave below the theorem. E.g.: 3pt
+  {}% name of font to use in the body of the theorem
+  {}% measure of space to indent
+  {\bfseries}% name of head font
+  {:}% punctuation between head and body
+  {2ex}% space after theorem head; " " = normal interword space
+  {}% Manually specify head
+\theoremstyle{ex215} 
+
+\makeatletter
+\newtheorem*{lemmacore}{Lemma \@currentlabel}
+\newenvironment{lemma}[1]
+{\def\@currentlabel{#1}\lemmacore}
+{\endlemmacore}
+
+\newtheorem*{corollarycore}{Corollary \@currentlabel}
+\newenvironment{corollary}[1]
+{\def\@currentlabel{#1}\corollarycore}
+{\endcorollarycore}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Stuff for getting the name/document date/title across the header
+\RequirePackage{fancyhdr}
+\pagestyle{fancy}
+\fancyfoot[C]{\ifnum \value{page} > 1\relax\thepage\fi}
+\fancyhead[L]{\ifx\@doclabel\@empty\else\@doclabel\fi}
+\fancyhead[C]{\ifx\@docauthor\@empty\else\@docdate\fi}
+\fancyhead[R]{\ifx\@docauthor\@empty\@docdate\else\@docauthor\fi}
+\headheight 15pt
+
+
+\def\doclabel#1{\gdef\@doclabel{#1}}
+\doclabel{Use {\tt\textbackslash doclabel\{MY LABEL\}}.}
+\def\docdate#1{\gdef\@docdate{#1}}
+\docdate{Use {\tt\textbackslash docdate\{MY DATE\}}.}
+\def\docauthor#1{\gdef\@docauthor{#1}}
+%\docauthor{Use {\tt\textbackslash docauthor\{MY NAME\}}.}
+\let\@docauthor\@empty
+
+\newcounter{probcount}
+\newcounter{subprobcount}
+\newlength\probsep
+\newlength\pshrinking
+\newif\iffirstprob
+
+% The following commands allow for a handy override of labels in an enumeration,
+% without having the user keep track of what level the enumeration is happening at.
+% To use them, just put \listlabel{....} as the first command after a \begin{enumerate}.
+% The '....' is used to define the label.  You can access the name of the current label
+% counter with \thelistlabel.  Hence \listlabel{\textbf{\Alph{\thelistlabel}:}} would
+% generate lists with bold labels A:, B:, C:, etc.
+\newcommand{\listlabel}[1]{\def\thelistlabel{\@enumctr}%
+            \expandafter\def\csname label\@enumctr\endcsname{#1}}
+
+
+\newenvironment{subproblems}%
+  {\begin{enumerate}\listlabel{\alph{\thelistlabel})}%
+  %% Make the enumerate environment think we are making a list in a list:
+  \global \@newlistfalse}%
+  {\end{enumerate}}%
+
+\newenvironment{problems}%
+  {\ifhmode\unskip\par\fi\setcounter{probcount}{0}\probsep\parskip
+  \sbox\@tempboxa{\textbf{9.}}\pshrinking\wd\@tempboxa\advance\pshrinking\labelsep
+  \advance\linewidth -\pshrinking
+  \advance\@totalleftmargin\pshrinking
+  \advance\leftskip\pshrinking}%
+  {\ifhmode\unskip \par\fi\advance\leftskip-\pshrinking}%
+
+\newcommand{\problem}{%
+  \setcounter{subprobcount}{0}%
+  \stepcounter{probcount}%
+  \def\@currentlabel{\arabic{probcount}}%
+  \ifhmode
+    \unskip \par
+  \fi
+%  \addpenalty{-4000}%
+  \iffirstprob\else\addvspace\probsep\fi
+  \firstprobfalse
+  \hskip -\labelwidth\hskip -\labelsep 
+  \hbox to\labelwidth{\hss\textbf{\arabic{probcount}.}}\hskip\labelsep
+}%
+
+%% The localhead command puts a label on top of a paragraph -- handy for labels
+%% like "Solution:"
+\newskip\restoreparskip
+\newcommand{\localhead}[1]{\par\smallskip\textbf{#1}\nobreak\\}%
+%% The following arcane code was added to make the localhead enviroment get along
+%% with the ams theorem enviroment (which is based on the latex list enviroment).
+%% previously, the command was {\par\smallskip\textbf{#1}\\}, but the list
+%% enviroment would also add a par at the end of this paragraph, which would result
+%% in an extra blank line.  Our solution now is to put in our own par, but with
+%% none of the parskip glue that adds extra space between paragraphs.
+%%  \restoreparskip\parskip\parskip 0pt\par\nobreak\noindent\parskip\restoreparskip}%
+\newcommand\solution{\localhead{Solution:}}
+\newcommand\subsol{\stepcounter{subprobcount}\localhead{Solution, part \alph{subprobcount}:}}
+\newcommand\subsoleg[1]{\stepcounter{subprobcount}\par\textbf{Solution, part \alph{subprobcount}:} #1\\}
+\def\solver#1{(Solution by #1)\\\vskip-12pt}
+
+
+%% The default 'article' class has captions that label figures Figure 1, etc.  This is too 
+%% formal for homework sets, so we change \caption so that it just puts the caption text.
+%% Here I have just modified the \@makecaption command from the article class.
+%% Maybe I should change this in the future to let authors decide whether or not to label a figure.
+
+\long\def\@makecaption#1#2{%
+  \vskip\abovecaptionskip
+  \sbox\@tempboxa{#2}%
+  \ifdim \wd\@tempboxa >\hsize
+    #2\par
+  \else
+    \global \@minipagefalse
+    \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
+  \fi
+  \vskip\belowcaptionskip}
+
+%% The default implementation of the proof environment starts a new paragraph at the start of the proof,
+%% with the full parskip spacing. This only looks good following a theorem statement 
+%% if \parskip is set to zero.  We've got a medium sized parskip, so we overide this 
+%% questionable decision.
+\renewenvironment{proof}[1][\proofname]{\par
+  \pushQED{\qed}%
+  \normalfont \topsep6\p@\@plus6\p@\relax
+  \trivlist
+  \@topsep \topsep
+  \item[\hskip\labelsep
+        \itshape
+    #1\@addpunct{.}]\ignorespaces
+}{%
+  \popQED\endtrivlist\@endpefalse
+}
+\makeatother
+
+% Shortcuts for blackboard bold number sets (reals, integers, etc.)
+\newcommand{\Reals}{\ensuremath{\mathbb R}}
+\newcommand{\Nats}{\ensuremath{\mathbb N}}
+\newcommand{\Ints}{\ensuremath{\mathbb Z}}
+\newcommand{\Rats}{\ensuremath{\mathbb Q}}
+\newcommand{\Cplx}{\ensuremath{\mathbb C}}
+%% Some equivalents that some people may prefer.
+\let\RR\Reals
+\let\NN\Nats
+\let\II\Ints
+\let\CC\Cplx
+
+
+% The following commands set up the material that appears
+% in the header.
+\doclabel{Math 663: Midterm 1 Re-write}
+\docauthor{Glen Woodworth}
+\docdate{11 October 2021}
+
+\begin{document}
+\begin{problems}
+
+\problem  Let $G$ be a simple graph such that $\delta(G)=k \geq 2.$ Prove that $G$ contains a cycle on at least $k+1$ vertices. (3 pts extra credit: Give an example that demonstrates this result is best possible.)
+
+\solution
+Let $G$ be a simple graph such that $\delta(G)=k \geq 2.$ Since every vertex in $G$ has at least two neighbors, $G$ must contain a cycle. Call it $C_n$. Suppose, for a contradiction, that $n<k+1$. Then when $k=2$, $n<3$, but this is a contradiction. The smallest cycle in a simple graph is on 3 vertices. Hence, the opposite must be true.
+\qed
+\problem Let $G$ be a connected graph on $n$ vertices. Prove that $G$ has exactly one cycle if and only if $G$ has exactly $n$ edges.
+\subsol
+$\rightarrow$ Suppose $G$ has exactly one cycle and $G$ is connected on $n$ vertices. Let $C_k$ be the cycle, $3\le k\le n$. All $uv\in E(G)$ such that $uv\notin E(C_k)$ are a part of a forest, $F$, with $n-k$ vertices. Hence, the forest has at most $n-k-1$ edges. Observe:
+\begin{align*}
+e(C_k)+e(F)&=k+n-
+\end{align*}
+
+
+\problem 2.1.12. Compute the diameter and radius of the biclique $K_{m,n}$.
+\solution
+diam$(K_{m,n})=2$ since no vertex is ever more than two edges away from any other. On the other hand, rad$(K_{m,n})=1$ since every vertex in one partite set is one edge from any vertex in the other partite set.
+\qed
+\problem Exercise 2.1.13. Prove that every graph with diameter $d$ has an independent set with at least $\lceil (1+d)/2\rceil$ vertices.
+\solution
+Let $G$ be a graph with diameter $d$. Let $u,v\in V(G)$ be such that $d(u,v)=d$. Vertices along this path that are not consecutive are nonadjacent. Then the number of vertices on the path, including $u$ and $v$, is $d+1$. Then splitting the path in half after $\lceil (1+d)/2\rceil$ vertices yields two independent sets, one with that size
+
+
+\problem Exercise 2.1.14: Suppose that the processors in a computer are named by binary $k$-tuples and pairs can communicate directly if and only if their names are adjacent in the $k$-dimensional cube $Q_k$. A processor with name $u$ wants to send a message to the processor with name $v$. How can it find the first step on a shortest path to $v$?
+\solution
+Since pairs must be adjacent to communicate, $u$ must choose from its neighbors. The shortest $u,v$-path  starts along any edge to a neighbor who differs from $v$ in the same spot that it differs from $u$. This will avoid backtracking, ensuring the communication always gets closer to $v$. (Viewed solution)
+
+
+\problem 2.1.18. Prove that every tree with maximum degree $\Delta >1$ has at least $\Delta$ vertices of degree 1. Show that this is best possible by constructing an $n$-vertex tree with exactly $\Delta$ leaves, for each choice of $n$, $\Delta$ with $n>\Delta\ge 2$.
+\solution
+We proceed inductively on the number of vertices. First, the base case. For $n\le 3$, the result is obvious, since a tree with three vertices has two vertices of degree two, a tree with two vertices has two vertices of degree one, and a tree with 0 or 1 vertices has zero degree. For $n>3$ deleting a leaf $u$ from $T$ produces tree $T_1$ where $n(T_1)=n-1$. Thus, we can apply the induction hypothesis to yield that there are at least $k-1$ leaves in $T-u$. Then, adding $u$ back in adds another vertex of maximum degree, since the maximum degree in $T$ must not be a leaf in $T-u$. (viewed solution)
+\qed
+  
+
+\problem 2.1.26: For $n\ge 3$, let $G$ be an $n$-vertex graph such that every graph obtained by deleting one vertex is a tree. Determine $e(G)$, and use this to determine $G$ itself.
+\solution
+Let $G_i$ be a graph obtained by deleting one vertex from $G$. Then $G_i$ has $n-1$ vertices and is a tree, so $G_i$ has $n-2$ edges. So, $\sum\lim_{i=1}^{n}e(G_i)=n(n-2)$. Hence, since each edge has two endpoints, endpoints, each edge appears in $n-2$ of these graphs, and thus counted $n-2$ times in the sum. Since $G$ has $n$ vertices and $n$ edges, it must contain a cycle. $G_i$ is just the opposite. Thus $G$ has a spanning cycle because every spanning cycle with $n$ additional edges. And since $G$ has $n$ edges, it has no extra edges. $G=C_k$ (viewed solution)
+\qed
+\problem 2.1.35. Let $T$ be a tree. Prove that the vertices of $T$ all have odd degree if and only if for all $e\in E(T)$, both components of $T-e$ have odd order.
+\subsol
+$\rightarrow$
+Assume the vertices of tree $T$ all have odd degree. Then $n(T)=2k$ for some $k\in\Nats$, since there must be an even number of vertices of odd degree. Consider the two components in $T-e$, $C_1$ and $C_2$ where $u,v$ are the endpoints of $e$. Let $u'\in C_1$ and $v'\in C_2$ represent $u$ and $v$, respectively, in $T-e$. Since $n(C_1)+n(C_2)=n(T)=2k$, $n(C_1)$ and $n(C_2)$ have the same parity. Since $u$ has odd degree, $u'$ has even degree while the rest of the vertices in $C_1$ have odd degree. Then $n(C_1)$ must be odd, since there must be an even number of vertices of odd degree plus 1 to account for $u'$. Hence, both components of $T-e$ have odd order. 
+\subsol
+$\leftarrow$
+We prove the contrapositive. Let $T$ be a tree. Assume there exists $e\in E(T)$ with endpoints $u,v\in V(T)$such that one of the components of $T-e$ has even order. We show that there exists a vertex in V(T) with even degree. Let $C_1$ and $C_2$ be the two components of $T-e$ such that $u'\in C_1$ and $v'\in C_2$. Suppose, without loss of generality, $C_1$ has even order. Then... not done, stuck
+\end{problems}
+\end{document}

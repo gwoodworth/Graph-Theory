@@ -1,0 +1,223 @@
+\documentclass[12pt]{article}
+
+\usepackage{amssymb,amsmath,amsthm}
+\usepackage[top=1in, bottom=1in, left=1.25in, right=1.25in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{enumerate}
+\usepackage{color}
+\usepackage{quiver}
+\usepackage{blkarray}
+\usepackage{subcaption}
+%% Import a package useful for displaying graphics.
+\usepackage{graphicx}
+\usepackage{quiver}
+
+% Comment the following line to use TeX's default font of Computer Modern.
+\usepackage{times,txfonts}
+
+% Adjust line spacing an indentation
+\parindent 0pt
+\parskip 6pt plus 1pt
+
+\newtheoremstyle{ex215}% name of the style to be used
+  {18pt}% measure of space to leave above the theorem. E.g.: 3pt
+  {12pt}% measure of space to leave below the theorem. E.g.: 3pt
+  {}% name of font to use in the body of the theorem
+  {}% measure of space to indent
+  {\bfseries}% name of head font
+  {:}% punctuation between head and body
+  {2ex}% space after theorem head; " " = normal interword space
+  {}% Manually specify head
+\theoremstyle{ex215} 
+
+\makeatletter
+\newtheorem*{lemmacore}{Lemma \@currentlabel}
+\newenvironment{lemma}[1]
+{\def\@currentlabel{#1}\lemmacore}
+{\endlemmacore}
+
+\newtheorem*{corollarycore}{Corollary \@currentlabel}
+\newenvironment{corollary}[1]
+{\def\@currentlabel{#1}\corollarycore}
+{\endcorollarycore}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Stuff for getting the name/document date/title across the header
+\RequirePackage{fancyhdr}
+\pagestyle{fancy}
+\fancyfoot[C]{\ifnum \value{page} > 1\relax\thepage\fi}
+\fancyhead[L]{\ifx\@doclabel\@empty\else\@doclabel\fi}
+\fancyhead[C]{\ifx\@docauthor\@empty\else\@docdate\fi}
+\fancyhead[R]{\ifx\@docauthor\@empty\@docdate\else\@docauthor\fi}
+\headheight 15pt
+
+
+\def\doclabel#1{\gdef\@doclabel{#1}}
+\doclabel{Use {\tt\textbackslash doclabel\{MY LABEL\}}.}
+\def\docdate#1{\gdef\@docdate{#1}}
+\docdate{Use {\tt\textbackslash docdate\{MY DATE\}}.}
+\def\docauthor#1{\gdef\@docauthor{#1}}
+%\docauthor{Use {\tt\textbackslash docauthor\{MY NAME\}}.}
+\let\@docauthor\@empty
+
+\newcounter{probcount}
+\newcounter{subprobcount}
+\newlength\probsep
+\newlength\pshrinking
+\newif\iffirstprob
+
+% The following commands allow for a handy override of labels in an enumeration,
+% without having the user keep track of what level the enumeration is happening at.
+% To use them, just put \listlabel{....} as the first command after a \begin{enumerate}.
+% The '....' is used to define the label.  You can access the name of the current label
+% counter with \thelistlabel.  Hence \listlabel{\textbf{\Alph{\thelistlabel}:}} would
+% generate lists with bold labels A:, B:, C:, etc.
+\newcommand{\listlabel}[1]{\def\thelistlabel{\@enumctr}%
+            \expandafter\def\csname label\@enumctr\endcsname{#1}}
+
+
+\newenvironment{subproblems}%
+  {\begin{enumerate}\listlabel{\alph{\thelistlabel})}%
+  %% Make the enumerate environment think we are making a list in a list:
+  \global \@newlistfalse}%
+  {\end{enumerate}}%
+
+\newenvironment{problems}%
+  {\ifhmode\unskip\par\fi\setcounter{probcount}{0}\probsep\parskip
+  \sbox\@tempboxa{\textbf{9.}}\pshrinking\wd\@tempboxa\advance\pshrinking\labelsep
+  \advance\linewidth -\pshrinking
+  \advance\@totalleftmargin\pshrinking
+  \advance\leftskip\pshrinking}%
+  {\ifhmode\unskip \par\fi\advance\leftskip-\pshrinking}%
+
+\newcommand{\problem}{%
+  \setcounter{subprobcount}{0}%
+  \stepcounter{probcount}%
+  \def\@currentlabel{\arabic{probcount}}%
+  \ifhmode
+    \unskip \par
+  \fi
+%  \addpenalty{-4000}%
+  \iffirstprob\else\addvspace\probsep\fi
+  \firstprobfalse
+  \hskip -\labelwidth\hskip -\labelsep 
+  \hbox to\labelwidth{\hss\textbf{\arabic{probcount}.}}\hskip\labelsep
+}%
+
+%% The localhead command puts a label on top of a paragraph -- handy for labels
+%% like "Solution:"
+\newskip\restoreparskip
+\newcommand{\localhead}[1]{\par\smallskip\textbf{#1}\nobreak\\}%
+%% The following arcane code was added to make the localhead enviroment get along
+%% with the ams theorem enviroment (which is based on the latex list enviroment).
+%% previously, the command was {\par\smallskip\textbf{#1}\\}, but the list
+%% enviroment would also add a par at the end of this paragraph, which would result
+%% in an extra blank line.  Our solution now is to put in our own par, but with
+%% none of the parskip glue that adds extra space between paragraphs.
+%%  \restoreparskip\parskip\parskip 0pt\par\nobreak\noindent\parskip\restoreparskip}%
+\newcommand\solution{\localhead{Solution:}}
+\newcommand\subsol{\stepcounter{subprobcount}\localhead{Solution, part \alph{subprobcount}:}}
+\newcommand\subsoleg[1]{\stepcounter{subprobcount}\par\textbf{Solution, part \alph{subprobcount}:} #1\\}
+\def\solver#1{(Solution by #1)\\\vskip-12pt}
+
+
+%% The default 'article' class has captions that label figures Figure 1, etc.  This is too 
+%% formal for homework sets, so we change \caption so that it just puts the caption text.
+%% Here I have just modified the \@makecaption command from the article class.
+%% Maybe I should change this in the future to let authors decide whether or not to label a figure.
+
+\long\def\@makecaption#1#2{%
+  \vskip\abovecaptionskip
+  \sbox\@tempboxa{#2}%
+  \ifdim \wd\@tempboxa >\hsize
+    #2\par
+  \else
+    \global \@minipagefalse
+    \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
+  \fi
+  \vskip\belowcaptionskip}
+
+%% The default implementation of the proof environment starts a new paragraph at the start of the proof,
+%% with the full parskip spacing. This only looks good following a theorem statement 
+%% if \parskip is set to zero.  We've got a medium sized parskip, so we overide this 
+%% questionable decision.
+\renewenvironment{proof}[1][\proofname]{\par
+  \pushQED{\qed}%
+  \normalfont \topsep6\p@\@plus6\p@\relax
+  \trivlist
+  \@topsep \topsep
+  \item[\hskip\labelsep
+        \itshape
+    #1\@addpunct{.}]\ignorespaces
+}{%
+  \popQED\endtrivlist\@endpefalse
+}
+\makeatother
+
+% Shortcuts for blackboard bold number sets (reals, integers, etc.)
+\newcommand{\Reals}{\ensuremath{\mathbb R}}
+\newcommand{\Nats}{\ensuremath{\mathbb N}}
+\newcommand{\Ints}{\ensuremath{\mathbb Z}}
+\newcommand{\Rats}{\ensuremath{\mathbb Q}}
+\newcommand{\Cplx}{\ensuremath{\mathbb C}}
+%% Some equivalents that some people may prefer.
+\let\RR\Reals
+\let\NN\Nats
+\let\II\Ints
+\let\CC\Cplx
+
+
+% The following commands set up the material that appears
+% in the header.
+\doclabel{Math 663: HW 10}
+\docauthor{Glen Woodworth}
+\docdate{16 November 2021}
+
+\begin{document}
+\begin{problems}
+
+\problem 4.2.1 Determine $k(u,v)$ and $k'(u,v)$ in the graph. (Hint: Use the dual problems to give short proofs of optimality.)
+\solution 
+There are three internally disjoint paths from $u$ to $v$. The three vertices with distance 2 from $u$ form a vertex cut. Hence, $k(u,v)=3$. On the other hand, we can find 5 internally edge disjoint $u,v$-paths. By Theorem 4.2.19, $k'(u,v)=5$. 
+\problem 4.2.4. Prove or disprove: If $P$ is a $u,v$-path in a 2-connected graph $G$, then there is a $u,v$-path $Q$ that is internally disjoint from $P$.
+\solution
+False. The graph below is 2-connected. Let $P=u,s,t,y,v$. There does not exists a $u,v$-path that is internally disjoint from $P$.
+% https://q.uiver.app/?q=WzAsNyxbMCwxLCJ1XFxidWxsZXQiXSxbMSwwLCJzXFxidWxsZXQiXSxbMiwxLCJ0XFxidWxsZXQiXSxbMSwyLCJ3XFxidWxsZXQiXSxbMywxLCJ5XFxidWxsZXQiXSxbMywwLCJ2XFxidWxsZXQiXSxbMiwyLCJ4XFxidWxsZXQiXSxbMCwxLCIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzAsMywiIiwyLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFszLDIsIiIsMix7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMSwyLCIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzIsNCwiIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFsyLDUsIiIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbNSw0LCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzMsNiwiIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs2LDQsIiIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XV0=
+\[\begin{tikzcd}
+	& s\bullet && v\bullet \\
+	u\bullet && t\bullet & y\bullet \\
+	& w\bullet & x\bullet
+	\arrow[no head, from=2-1, to=1-2]
+	\arrow[no head, from=2-1, to=3-2]
+	\arrow[no head, from=3-2, to=2-3]
+	\arrow[no head, from=1-2, to=2-3]
+	\arrow[no head, from=2-3, to=2-4]
+	\arrow[no head, from=2-3, to=1-4]
+	\arrow[no head, from=1-4, to=2-4]
+	\arrow[no head, from=3-2, to=3-3]
+	\arrow[no head, from=3-3, to=2-4]
+\end{tikzcd}\]
+\problem 4.2.5. Let $G$ be a simple graph, and let $H(G)$ be the graph with vertex set $V(G)$ such that $uv\in E(H)$ if and only if $u,v$ appear on a common cycle in $G$. Characterize the graphs $G$ such that $H$ is a clique. 
+\solution
+The graphs $G$ will produce $H$ that is a clique if and only if $G$ is 2-connected. Observe:
+\begin{align*}
+G\text{ is 2-connected }&\iff\delta (G)\ge 1\text{, and every pair of edges in }G\text{ lies on a common cycle.}\\
+&\iff\forall u,v\in V(G),uv\in E(H)\\
+&\iff\text{H is a clique.}
+\end{align*}
+\qed
+\problem 4.2.8 Prove that a simple graph $G$ is 2-connected if and only if for every triple $(x,y,z)$ of distinct vertices, $G$ has an $x,z$-path through $y$.
+\solution
+$\rightarrow$\\
+Assume $G$ is 2-connected and $x,y,$ and $z$ are three distinct vertices. We construct $G'$ by adding vertex $y'$ adjacent to $x$ and $z$. Then $G'$ is 2-connected, so we can find two internally disjoint $y,y'$-paths in $G'$. Deleting $y'$ yields a $x,z$-path through $y$ in $G$.\\
+$\leftarrow$\\
+Suppose for every triple of distinct vertices, $G$ has an $x,z$-path through $y$. Hence $G$ is connected. Suppose, for a contradiction, that $G$ has a cut-vertex, $x$. Let $C_1$ and $C_2$ be any two components in $G-v$. Then let $y\in C_1$ and $z\in C_2$. Then $G$ has no $x,z$-path through $y$, a contradiction.
+\qed
+\problem 4.2.12. Use Menger's Theorem to prove that $k(G)=k'(G)$ when $G$ is 3-regular.
+\solution First, notice that it is sufficient to show that $k'(G)\le k(G)$ because we know $k(G)\le k'(G)$. Without loss of generality, assume there exists $x,y\in V(G)$ such that $x$ and $y$ are not neighbors. Let $k=k'(G)$. By Theorem 4.2.19., for all $x$ and $y$ not adjacent in $G$, there exists $k$ edge disjoint paths. Suppose for a contradiction that any two of these paths share a single vertex $v$. Then $v$ has four edges incident to it because the paths are edge disjoint. This is a contradiction because we assumed $G$ is 3-regular.
+\qed
+
+\end{problems}
+\end{document}

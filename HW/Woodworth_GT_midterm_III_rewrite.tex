@@ -1,0 +1,227 @@
+\documentclass[12pt]{article}
+
+\usepackage{amssymb,amsmath,amsthm}
+\usepackage[top=1in, bottom=1in, left=1.25in, right=1.25in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{enumerate}
+\usepackage{color}
+\usepackage{quiver}
+\usepackage{blkarray}
+\usepackage{subcaption}
+%% Import a package useful for displaying graphics.
+\usepackage{graphicx}
+\usepackage{quiver}
+
+% Comment the following line to use TeX's default font of Computer Modern.
+\usepackage{times,txfonts}
+
+% Adjust line spacing an indentation
+\parindent 0pt
+\parskip 6pt plus 1pt
+
+\newtheoremstyle{ex215}% name of the style to be used
+  {18pt}% measure of space to leave above the theorem. E.g.: 3pt
+  {12pt}% measure of space to leave below the theorem. E.g.: 3pt
+  {}% name of font to use in the body of the theorem
+  {}% measure of space to indent
+  {\bfseries}% name of head font
+  {:}% punctuation between head and body
+  {2ex}% space after theorem head; " " = normal interword space
+  {}% Manually specify head
+\theoremstyle{ex215} 
+
+\makeatletter
+\newtheorem*{lemmacore}{Lemma \@currentlabel}
+\newenvironment{lemma}[1]
+{\def\@currentlabel{#1}\lemmacore}
+{\endlemmacore}
+
+\newtheorem*{corollarycore}{Corollary \@currentlabel}
+\newenvironment{corollary}[1]
+{\def\@currentlabel{#1}\corollarycore}
+{\endcorollarycore}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Stuff for getting the name/document date/title across the header
+\RequirePackage{fancyhdr}
+\pagestyle{fancy}
+\fancyfoot[C]{\ifnum \value{page} > 1\relax\thepage\fi}
+\fancyhead[L]{\ifx\@doclabel\@empty\else\@doclabel\fi}
+\fancyhead[C]{\ifx\@docauthor\@empty\else\@docdate\fi}
+\fancyhead[R]{\ifx\@docauthor\@empty\@docdate\else\@docauthor\fi}
+\headheight 15pt
+
+
+\def\doclabel#1{\gdef\@doclabel{#1}}
+\doclabel{Use {\tt\textbackslash doclabel\{MY LABEL\}}.}
+\def\docdate#1{\gdef\@docdate{#1}}
+\docdate{Use {\tt\textbackslash docdate\{MY DATE\}}.}
+\def\docauthor#1{\gdef\@docauthor{#1}}
+%\docauthor{Use {\tt\textbackslash docauthor\{MY NAME\}}.}
+\let\@docauthor\@empty
+
+\newcounter{probcount}
+\newcounter{subprobcount}
+\newlength\probsep
+\newlength\pshrinking
+\newif\iffirstprob
+
+% The following commands allow for a handy override of labels in an enumeration,
+% without having the user keep track of what level the enumeration is happening at.
+% To use them, just put \listlabel{....} as the first command after a \begin{enumerate}.
+% The '....' is used to define the label.  You can access the name of the current label
+% counter with \thelistlabel.  Hence \listlabel{\textbf{\Alph{\thelistlabel}:}} would
+% generate lists with bold labels A:, B:, C:, etc.
+\newcommand{\listlabel}[1]{\def\thelistlabel{\@enumctr}%
+            \expandafter\def\csname label\@enumctr\endcsname{#1}}
+
+
+\newenvironment{subproblems}%
+  {\begin{enumerate}\listlabel{\alph{\thelistlabel})}%
+  %% Make the enumerate environment think we are making a list in a list:
+  \global \@newlistfalse}%
+  {\end{enumerate}}%
+
+\newenvironment{problems}%
+  {\ifhmode\unskip\par\fi\setcounter{probcount}{0}\probsep\parskip
+  \sbox\@tempboxa{\textbf{9.}}\pshrinking\wd\@tempboxa\advance\pshrinking\labelsep
+  \advance\linewidth -\pshrinking
+  \advance\@totalleftmargin\pshrinking
+  \advance\leftskip\pshrinking}%
+  {\ifhmode\unskip \par\fi\advance\leftskip-\pshrinking}%
+
+\newcommand{\problem}{%
+  \setcounter{subprobcount}{0}%
+  \stepcounter{probcount}%
+  \def\@currentlabel{\arabic{probcount}}%
+  \ifhmode
+    \unskip \par
+  \fi
+%  \addpenalty{-4000}%
+  \iffirstprob\else\addvspace\probsep\fi
+  \firstprobfalse
+  \hskip -\labelwidth\hskip -\labelsep 
+  \hbox to\labelwidth{\hss\textbf{\arabic{probcount}.}}\hskip\labelsep
+}%
+
+%% The localhead command puts a label on top of a paragraph -- handy for labels
+%% like "Solution:"
+\newskip\restoreparskip
+\newcommand{\localhead}[1]{\par\smallskip\textbf{#1}\nobreak\\}%
+%% The following arcane code was added to make the localhead enviroment get along
+%% with the ams theorem enviroment (which is based on the latex list enviroment).
+%% previously, the command was {\par\smallskip\textbf{#1}\\}, but the list
+%% enviroment would also add a par at the end of this paragraph, which would result
+%% in an extra blank line.  Our solution now is to put in our own par, but with
+%% none of the parskip glue that adds extra space between paragraphs.
+%%  \restoreparskip\parskip\parskip 0pt\par\nobreak\noindent\parskip\restoreparskip}%
+\newcommand\solution{\localhead{Solution:}}
+\newcommand\subsol{\stepcounter{subprobcount}\localhead{Solution, part \alph{subprobcount}:}}
+\newcommand\subsoleg[1]{\stepcounter{subprobcount}\par\textbf{Solution, part \alph{subprobcount}:} #1\\}
+\def\solver#1{(Solution by #1)\\\vskip-12pt}
+
+
+%% The default 'article' class has captions that label figures Figure 1, etc.  This is too 
+%% formal for homework sets, so we change \caption so that it just puts the caption text.
+%% Here I have just modified the \@makecaption command from the article class.
+%% Maybe I should change this in the future to let authors decide whether or not to label a figure.
+
+\long\def\@makecaption#1#2{%
+  \vskip\abovecaptionskip
+  \sbox\@tempboxa{#2}%
+  \ifdim \wd\@tempboxa >\hsize
+    #2\par
+  \else
+    \global \@minipagefalse
+    \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
+  \fi
+  \vskip\belowcaptionskip}
+
+%% The default implementation of the proof environment starts a new paragraph at the start of the proof,
+%% with the full parskip spacing. This only looks good following a theorem statement 
+%% if \parskip is set to zero.  We've got a medium sized parskip, so we overide this 
+%% questionable decision.
+\renewenvironment{proof}[1][\proofname]{\par
+  \pushQED{\qed}%
+  \normalfont \topsep6\p@\@plus6\p@\relax
+  \trivlist
+  \@topsep \topsep
+  \item[\hskip\labelsep
+        \itshape
+    #1\@addpunct{.}]\ignorespaces
+}{%
+  \popQED\endtrivlist\@endpefalse
+}
+\makeatother
+
+% Shortcuts for blackboard bold number sets (reals, integers, etc.)
+\newcommand{\Reals}{\ensuremath{\mathbb R}}
+\newcommand{\Nats}{\ensuremath{\mathbb N}}
+\newcommand{\Ints}{\ensuremath{\mathbb Z}}
+\newcommand{\Rats}{\ensuremath{\mathbb Q}}
+\newcommand{\Cplx}{\ensuremath{\mathbb C}}
+%% Some equivalents that some people may prefer.
+\let\RR\Reals
+\let\NN\Nats
+\let\II\Ints
+\let\CC\Cplx
+
+
+% The following commands set up the material that appears
+% in the header.
+\doclabel{Math 663: Midterm III Rewrite}
+\docauthor{Glen Woodworth}
+\docdate{29 November 2021}
+
+\begin{document}
+\begin{problems}
+\problem Five jobs, five applicants, etc... Complete two iterations of the Gale-Shapley Proposal Algorithm. For each iteration, you should stat the proposals and the rejections.
+\solution An $X$ indicates a rejection.\\
+First iteration:
+\begin{align*}
+\text{Proposals}||&\text{Rejections}\\
+j_1,a_1||&\\
+j_2,a_1||&X\\
+j_3,a_1||&X\\
+j_4,a_2||&\\
+j_5,a_3||&\\
+\end{align*}
+Second iteration:
+\begin{align*}
+\text{Proposals}||&\text{Rejections}\\
+j_1,a_1||&\\
+j_2,a_2||&\\
+j_3,a_3||&X\\
+j_4,a_2||&X\\
+j_5,a_3||&\\
+\end{align*}
+\qed
+\problem Answer questions about the graph $G$.
+\begin{subproblems}
+\item Find $k(G)$ and $k(G')$.
+\item Give and example of a pair of vertices $x,y$ such that $k(x,y)>k(G)$.
+\item Give an example of a disconnecting set of edges $F$ of $G$ that is minimal but not minimum.
+\end{subproblems}
+\subsol We have: $k(G)=k'(G)=2$.
+\subsol Consider $(x,y)=(b_2,b_1)$. For this pair, $k(b_2,b_1)=4>2$.
+\subsol Consider the disconnecting set $F=\{b_2a_z,b_2,a_3,b_2a_4,b_2a_5\}$.
+\qed
+\problem Assume $G$ is a connected graph on at least $3$ vertices. Prove that $G$ is 2-edge-connected if and only if every edge of $G$ lies on a cycle.
+\solution Let $G$ be a connected graph on at least 3 vertices.\\
+We proceed via contradiction. 
+\begin{align*}
+G\text{ is not 2-edge-connected}&\iff\exists\;S\subset E(G): G-S\text{ is disconnected and }|S|=1\\
+&\iff G\text{ has a cut-edge }e\\
+&\iff e\text{ is not on a cycle}.
+\end{align*}
+\qed
+\problem Prove that if $G$ is $k$-connected and $G'$ is constructed from $G$ by adding a vertex $v$ with at least $k$ neighbors in $V(G)$, then $G'$ must also be $k$-connected.
+\solution Let $S\subset V(G')$ be any separating set of $G'$. We consider 3 cases. If $v\in S$, then $G-(S+\{v\})$ is disconnected. Therefore, $|S|\ge k+1$. On the other hand, if $v\notin S$ but $N(v)\subseteq S$, then $G-S$ is disconnected. Hence, $|S|\ge k$. Lastly, if $v\notin N(S)$ and $v\notin S$, then $G-S$ is disconnected, so $|S|\ge k$. Since in every possible case, $|S|\ge k$, $G'$ is $k$-connected.
+\qed
+\problem Let $G$ be a $k$-connected graph. Let $A=\{ a_1,a_2,\dots,a_k\}$ and $B=\{b_1,b_2,\dots,b_k\}$ be disjoint subsets of $V(G)$ such that $|A|=|B|=k$. Prove that $G$ contains $k$ pairwise disjoint $A,B$-paths. (That is, $G$ contains $k$ paths each of which start with a vertex from the set $A$, end with a vertex from the set $B$ and share no vertices.)
+\solution Create $G'$ by adding to $G$ two vertices, $v_A$ and $v_B$ and add $k$ edges to incident to both of them such that  $v_A\leftrightarrow a_i$ and $v_B\leftrightarrow b_i$ for every $1\le i\le k$. From the previous result, since $G$ is connected, $G'$ is $k$-connected as well. Hence, there exists $k$ pairwise disjoint $v_Av_B$-paths in $G'$ through $A$ and $B$. Deleting $v_A$ and $v_B$ leaves us with $G$, but there remains $k$ disjoint $A,B$-paths.
+\qed
+\end{problems}
+\end{document}

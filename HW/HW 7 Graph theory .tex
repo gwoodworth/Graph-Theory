@@ -1,0 +1,307 @@
+\documentclass[12pt]{article}
+
+\usepackage{amssymb,amsmath,amsthm}
+\usepackage[top=1in, bottom=1in, left=1.25in, right=1.25in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{enumerate}
+\usepackage{color}
+\usepackage{quiver}
+\usepackage{blkarray}
+\usepackage{subcaption}
+%% Import a package useful for displaying graphics.
+\usepackage{graphicx}
+\usepackage{quiver}
+
+% Comment the following line to use TeX's default font of Computer Modern.
+\usepackage{times,txfonts}
+
+% Adjust line spacing an indentation
+\parindent 0pt
+\parskip 6pt plus 1pt
+
+\newtheoremstyle{ex215}% name of the style to be used
+  {18pt}% measure of space to leave above the theorem. E.g.: 3pt
+  {12pt}% measure of space to leave below the theorem. E.g.: 3pt
+  {}% name of font to use in the body of the theorem
+  {}% measure of space to indent
+  {\bfseries}% name of head font
+  {:}% punctuation between head and body
+  {2ex}% space after theorem head; " " = normal interword space
+  {}% Manually specify head
+\theoremstyle{ex215} 
+
+\makeatletter
+\newtheorem*{lemmacore}{Lemma \@currentlabel}
+\newenvironment{lemma}[1]
+{\def\@currentlabel{#1}\lemmacore}
+{\endlemmacore}
+
+\newtheorem*{corollarycore}{Corollary \@currentlabel}
+\newenvironment{corollary}[1]
+{\def\@currentlabel{#1}\corollarycore}
+{\endcorollarycore}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Stuff for getting the name/document date/title across the header
+\RequirePackage{fancyhdr}
+\pagestyle{fancy}
+\fancyfoot[C]{\ifnum \value{page} > 1\relax\thepage\fi}
+\fancyhead[L]{\ifx\@doclabel\@empty\else\@doclabel\fi}
+\fancyhead[C]{\ifx\@docauthor\@empty\else\@docdate\fi}
+\fancyhead[R]{\ifx\@docauthor\@empty\@docdate\else\@docauthor\fi}
+\headheight 15pt
+
+
+\def\doclabel#1{\gdef\@doclabel{#1}}
+\doclabel{Use {\tt\textbackslash doclabel\{MY LABEL\}}.}
+\def\docdate#1{\gdef\@docdate{#1}}
+\docdate{Use {\tt\textbackslash docdate\{MY DATE\}}.}
+\def\docauthor#1{\gdef\@docauthor{#1}}
+%\docauthor{Use {\tt\textbackslash docauthor\{MY NAME\}}.}
+\let\@docauthor\@empty
+
+\newcounter{probcount}
+\newcounter{subprobcount}
+\newlength\probsep
+\newlength\pshrinking
+\newif\iffirstprob
+
+% The following commands allow for a handy override of labels in an enumeration,
+% without having the user keep track of what level the enumeration is happening at.
+% To use them, just put \listlabel{....} as the first command after a \begin{enumerate}.
+% The '....' is used to define the label.  You can access the name of the current label
+% counter with \thelistlabel.  Hence \listlabel{\textbf{\Alph{\thelistlabel}:}} would
+% generate lists with bold labels A:, B:, C:, etc.
+\newcommand{\listlabel}[1]{\def\thelistlabel{\@enumctr}%
+            \expandafter\def\csname label\@enumctr\endcsname{#1}}
+
+
+\newenvironment{subproblems}%
+  {\begin{enumerate}\listlabel{\alph{\thelistlabel})}%
+  %% Make the enumerate environment think we are making a list in a list:
+  \global \@newlistfalse}%
+  {\end{enumerate}}%
+
+\newenvironment{problems}%
+  {\ifhmode\unskip\par\fi\setcounter{probcount}{0}\probsep\parskip
+  \sbox\@tempboxa{\textbf{9.}}\pshrinking\wd\@tempboxa\advance\pshrinking\labelsep
+  \advance\linewidth -\pshrinking
+  \advance\@totalleftmargin\pshrinking
+  \advance\leftskip\pshrinking}%
+  {\ifhmode\unskip \par\fi\advance\leftskip-\pshrinking}%
+
+\newcommand{\problem}{%
+  \setcounter{subprobcount}{0}%
+  \stepcounter{probcount}%
+  \def\@currentlabel{\arabic{probcount}}%
+  \ifhmode
+    \unskip \par
+  \fi
+%  \addpenalty{-4000}%
+  \iffirstprob\else\addvspace\probsep\fi
+  \firstprobfalse
+  \hskip -\labelwidth\hskip -\labelsep 
+  \hbox to\labelwidth{\hss\textbf{\arabic{probcount}.}}\hskip\labelsep
+}%
+
+%% The localhead command puts a label on top of a paragraph -- handy for labels
+%% like "Solution:"
+\newskip\restoreparskip
+\newcommand{\localhead}[1]{\par\smallskip\textbf{#1}\nobreak\\}%
+%% The following arcane code was added to make the localhead enviroment get along
+%% with the ams theorem enviroment (which is based on the latex list enviroment).
+%% previously, the command was {\par\smallskip\textbf{#1}\\}, but the list
+%% enviroment would also add a par at the end of this paragraph, which would result
+%% in an extra blank line.  Our solution now is to put in our own par, but with
+%% none of the parskip glue that adds extra space between paragraphs.
+%%  \restoreparskip\parskip\parskip 0pt\par\nobreak\noindent\parskip\restoreparskip}%
+\newcommand\solution{\localhead{Solution:}}
+\newcommand\subsol{\stepcounter{subprobcount}\localhead{Solution, part \alph{subprobcount}:}}
+\newcommand\subsoleg[1]{\stepcounter{subprobcount}\par\textbf{Solution, part \alph{subprobcount}:} #1\\}
+\def\solver#1{(Solution by #1)\\\vskip-12pt}
+
+
+%% The default 'article' class has captions that label figures Figure 1, etc.  This is too 
+%% formal for homework sets, so we change \caption so that it just puts the caption text.
+%% Here I have just modified the \@makecaption command from the article class.
+%% Maybe I should change this in the future to let authors decide whether or not to label a figure.
+
+\long\def\@makecaption#1#2{%
+  \vskip\abovecaptionskip
+  \sbox\@tempboxa{#2}%
+  \ifdim \wd\@tempboxa >\hsize
+    #2\par
+  \else
+    \global \@minipagefalse
+    \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
+  \fi
+  \vskip\belowcaptionskip}
+
+%% The default implementation of the proof environment starts a new paragraph at the start of the proof,
+%% with the full parskip spacing. This only looks good following a theorem statement 
+%% if \parskip is set to zero.  We've got a medium sized parskip, so we overide this 
+%% questionable decision.
+\renewenvironment{proof}[1][\proofname]{\par
+  \pushQED{\qed}%
+  \normalfont \topsep6\p@\@plus6\p@\relax
+  \trivlist
+  \@topsep \topsep
+  \item[\hskip\labelsep
+        \itshape
+    #1\@addpunct{.}]\ignorespaces
+}{%
+  \popQED\endtrivlist\@endpefalse
+}
+\makeatother
+
+% Shortcuts for blackboard bold number sets (reals, integers, etc.)
+\newcommand{\Reals}{\ensuremath{\mathbb R}}
+\newcommand{\Nats}{\ensuremath{\mathbb N}}
+\newcommand{\Ints}{\ensuremath{\mathbb Z}}
+\newcommand{\Rats}{\ensuremath{\mathbb Q}}
+\newcommand{\Cplx}{\ensuremath{\mathbb C}}
+%% Some equivalents that some people may prefer.
+\let\RR\Reals
+\let\NN\Nats
+\let\II\Ints
+\let\CC\Cplx
+
+
+% The following commands set up the material that appears
+% in the header.
+\doclabel{Math 663: HW 7}
+\docauthor{Glen Woodworth}
+\docdate{19 October 2021}
+
+\begin{document}
+\begin{problems}
+
+\problem 2.3.3 There are exactly five cities in a network. The cost of building a road directly between $i$ and $j$ is the entry $a_{i,j}$ in the matrix below. An infinite entry indicates that there is a mountain in the way and the road cannot be built. Determine the least cost of making all the cities reachable from each other.
+\[
+\left(\begin{matrix}
+0&3&5&11&9\\
+3&0&3&9&8\\
+5&3&0&\infty&10\\
+11&9&\infty&0&7\\
+9&8&10&7&0
+\end{matrix}\right)
+\]
+\solution
+First, label the vertices as shown below:
+\[
+\left(\begin{matrix}
+a&b&c&d&e\\
+0&3&5&11&9\\
+3&0&3&9&8\\
+5&3&0&\infty&10\\
+11&9&\infty&0&7\\
+9&8&10&7&0
+\end{matrix}\right)
+\]
+Using Kruskal's algorithm, we produce the following iterations of edges:\\
+1)$ab$\\
+2)$bc$\\
+3)$ed$\\
+4)$be$.\\
+Total weight: 21. Hence, the least cost of making all the cities reachable from each other is 21.
+\qed
+\problem 2.3.12 In a weighted complete graph, iteratively select the edge of least weight such that the edges selected so far form a disjoint union of paths. After $n-1$ steps, the result is a spanning path. Prove that this algorithm always gives a minimum-weight spanning path, or give an infinite family of counterexamples where it fails.
+\solution
+The algorithm does not always work. Consider a weighted graph constructed from $C_n$ such that the vertices, are labeled in order around the cycle as $v=,1,2,..., n$. Now add an edge between vertex $n-1$ and vertex 2. Now, suppose all the edges are weight 1 except the edge from vertex $n-1$ to vertex 2, call it $a$, is 2 and the edge from vertex $n$ to vertex 1, call it $b$, has weight 7. Then the algorithm will output a spanning path using the edge $b$ but it would be cheaper to go through $a$ instead.
+\problem A,B,C from worksheet.
+\subsol
+The shortest $st$-path is $sabcht$. It has length 12.
+% https://q.uiver.app/?q=WzAsMTEsWzEsMCwiXFxidWxsZXQiXSxbMiwwLCJcXGJ1bGxldCJdLFsyLDEsImNcXCBcXGJ1bGxldCJdLFsxLDEsImJcXCBcXGJ1bGxldCJdLFsyLDIsIlxcYnVsbGV0Il0sWzEsMiwiYVxcIFxcYnVsbGV0Il0sWzAsMSwic1xcIFxcYnVsbGV0Il0sWzMsMCwiXFxidWxsZXQiXSxbMywxLCJoXFwgXFxidWxsZXQiXSxbMywyLCJcXGJ1bGxldCJdLFs0LDEsIlxcYnVsbGV0IFxcIHQiXSxbMCwxLCI4IiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFsxLDIsIjMiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzAsMywiNCIsMix7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMywyLCIxIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFsyLDQsIjIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzMsNSwiMSIsMix7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbNCw1LCI1IiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs1LDYsIjMiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzYsMCwiMiIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMSw3LCIzIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs3LDgsIjUiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzgsOSwiNCIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbOSw0LCI1IiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFsyLDgsIjQiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzAsMiwiOSIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMiw5LCI3IiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFsxLDgsIjIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzcsMTAsIjIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzksMTAsIjMiLDIseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzgsMTAsIjMiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzMsNCwiMiIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbNiwzLCI3IiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dXQ==
+\[\begin{tikzcd}
+	& \bullet & \bullet & \bullet \\
+	{s\ \bullet} & {b\ \bullet} & {c\ \bullet} & {h\ \bullet} & {\bullet \ t} \\
+	& {a\ \bullet} & \bullet & \bullet
+	\arrow["8", no head, from=1-2, to=1-3]
+	\arrow["3", no head, from=1-3, to=2-3]
+	\arrow["4"', no head, from=1-2, to=2-2]
+	\arrow["1", no head, from=2-2, to=2-3]
+	\arrow["2", no head, from=2-3, to=3-3]
+	\arrow["1"', no head, from=2-2, to=3-2]
+	\arrow["5", no head, from=3-3, to=3-2]
+	\arrow["3", no head, from=3-2, to=2-1]
+	\arrow["2", no head, from=2-1, to=1-2]
+	\arrow["3", no head, from=1-3, to=1-4]
+	\arrow["5", no head, from=1-4, to=2-4]
+	\arrow["4", no head, from=2-4, to=3-4]
+	\arrow["5", no head, from=3-4, to=3-3]
+	\arrow["4", no head, from=2-3, to=2-4]
+	\arrow["9", no head, from=1-2, to=2-3]
+	\arrow["7", no head, from=2-3, to=3-4]
+	\arrow["2", no head, from=1-3, to=2-4]
+	\arrow["2", no head, from=1-4, to=2-5]
+	\arrow["3"', no head, from=3-4, to=2-5]
+	\arrow["3", no head, from=2-4, to=2-5]
+	\arrow["2", no head, from=2-2, to=3-3]
+	\arrow["7", no head, from=2-1, to=2-2]
+\end{tikzcd}\]
+\subsol
+Consider the graph below. Since $d$ and $f$ are the only odd vertices, they are the only ones that require repeating an edge. Therefore, solving the Chinese Postman problem requires finding the minimum weight $df$ path. By inspection, this is $dabcf$, which has weight 8. Hence, the walk $dabcfacdfcbad$, of weight 48, solves the Chinese Postman problem on the below graph. This solution is unique because the minimum weight $df$-path is unique.
+% https://q.uiver.app/?q=WzAsNSxbMCwyLCJmXFwgXFxidWxsZXQiXSxbMCwxLCJhXFwgXFxidWxsZXQiXSxbMiwxLCJcXGJ1bGxldCBcXCBjIl0sWzIsMiwiXFxidWxsZXQgXFwgZCJdLFsxLDAsImJcXCBcXGJ1bGxldCJdLFsxLDIsIjYiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzQsMSwiMiIsMix7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbNCwyLCIyIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFsxLDAsIjgiLDIseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzAsMywiMTAiLDIseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzIsMywiOCIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMSwzLCIyIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFswLDIsIjIiLDIseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV1d
+\[\begin{tikzcd}
+	& {b\ \bullet} \\
+	{a\ \bullet} && {\bullet \ c} \\
+	{f\ \bullet} && {\bullet \ d}
+	\arrow["6", no head, from=2-1, to=2-3]
+	\arrow["2"', no head, from=1-2, to=2-1]
+	\arrow["2", no head, from=1-2, to=2-3]
+	\arrow["8"', no head, from=2-1, to=3-1]
+	\arrow["10"', no head, from=3-1, to=3-3]
+	\arrow["8", no head, from=2-3, to=3-3]
+	\arrow["2", no head, from=2-1, to=3-3]
+	\arrow["2"', no head, from=3-1, to=2-3]
+\end{tikzcd}\]
+\subsol
+Breadth-first tree obtained by starting at vertex $x$ shown below.
+% https://q.uiver.app/?q=WzAsOCxbMSwwLCJiIl0sWzMsMCwieCJdLFs0LDEsInQiXSxbMywyLCJmIl0sWzEsMiwiYyJdLFswLDEsImEiXSxbNCwwLCJlIl0sWzIsMSwiZCJdLFsxLDYsIiIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMywyLCIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzAsMSwiIiwyLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs0LDcsIiIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMSwyLCIiLDIseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzcsMSwiIiwyLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs1LDAsIiIsMix7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XV0=
+\[\begin{tikzcd}
+	& b && x & e \\
+	a && d && t \\
+	& c && f
+	\arrow[no head, from=1-4, to=1-5]
+	\arrow[no head, from=3-4, to=2-5]
+	\arrow[no head, from=1-2, to=1-4]
+	\arrow[no head, from=3-2, to=2-3]
+	\arrow[no head, from=1-4, to=2-5]
+	\arrow[no head, from=2-3, to=1-4]
+	\arrow[no head, from=2-1, to=1-2]
+\end{tikzcd}\]\\
+Breadth-first tree obtained by starting at vertex $f$ shown below.
+% https://q.uiver.app/?q=WzAsOCxbMSwwLCJiIl0sWzMsMCwieCJdLFs0LDEsInQiXSxbMywyLCJmIl0sWzEsMiwiYyJdLFswLDEsImEiXSxbNCwwLCJlIl0sWzIsMSwiZCJdLFsxLDYsIiIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMywyLCIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzMsNCwiIiwyLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs0LDUsIiIsMix7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMCwxLCIiLDIseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzQsNywiIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFsxLDIsIiIsMix7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XV0=
+\[\begin{tikzcd}
+	& b && x & e \\
+	a && d && t \\
+	& c && f
+	\arrow[no head, from=1-4, to=1-5]
+	\arrow[no head, from=3-4, to=2-5]
+	\arrow[no head, from=3-4, to=3-2]
+	\arrow[no head, from=3-2, to=2-1]
+	\arrow[no head, from=1-2, to=1-4]
+	\arrow[no head, from=3-2, to=2-3]
+	\arrow[no head, from=1-4, to=2-5]
+\end{tikzcd}\]
+\problem 2.3.14 Let $C$ be a cycle in a connected weighted graph. Let $e$ be an edge of maximum weight on $C$. Prove that there is a minimum spanning tree not containing $e$. Use this to prove that iteratively deleting the heaviest non-cut-edge until the remaining graph is acyclic produces a minimum-weight spanning tree. 
+\solution
+Let $G$ be a connected weighted graph with a cycle $C$ where $e$ is an edge of maximum weight in $C$. Let $T$ be a minimum weight spanning tree in $G$. If $e\notin E(T)$, then the result follows. Otherwise, if $e\in E(T)$, there exists some other edge in $C$ that is not in $T$. This edge, call it $f$, must have weight less than or equal to the weight of $e$ by assumption. Thus, $w(T-e+f)\le w(T)$. Hence, $T-e+f$ is a minimum weight spanning tree not using edge $e$.\\
+
+Suppose we iteratively delete the maximum weight edges lying on a cycle in $G$. The algorithm continues until there are no more cycles left in $G$. Hence, the output is acyclic and connected by definition. By the previous argument, each iteration does not change the weight of a minimum weight spanning tree on $G$. Hence, the algorithm produces a minimum spanning tree. 
+\qed
+\problem 2.3.22.Solve the Chinese Postman Problem in the $k$-dimensional cube $Q_k$ under the condition that every edge has weight 1. 
+\solution
+By definition, $Q_k$ is $k$-regular and connected. If $k$ is even, then $Q_k$ is Eulerian. In that case, the Postman problem is solved by an Euler circuit with a weight of $k*2^{k-1}$. Otherwise, if $k$ is odd, we Eulerize $Q_k$ by adding a degree to every vertex. We do this by duplicating $2^{k-1}$ edges in disjoint copies of $Q_{k-1}$ in $Q_k$. The resulting tour has weight $k2^{k-1}+2^{k-1}=(k+1)2^{k-1}$
+
+\problem 3.1.2. Determine the minimum size of a maximal matching in the cycle $C_n$.
+\solution
+If $n$ is even, then we can always add another edge to our matching up until we have a matching of $n/2$ in $C_n$. If, however, $n$ is odd, then we can still add an edge up until the floor of $n/2$.
+\problem 3.1.8. Prove or disprove: every tree has at most one perfect matching.
+\solution 
+Let $M_1$ and $M_2$ be two perfect matchings on a tree $T$....
+
+\end{problems}
+\end{document}

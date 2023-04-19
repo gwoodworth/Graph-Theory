@@ -1,0 +1,295 @@
+\documentclass[12pt]{article}
+
+\usepackage{amssymb,amsmath,amsthm}
+\usepackage[top=1in, bottom=1in, left=1.25in, right=1.25in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{enumerate}
+\usepackage{color}
+\usepackage{quiver}
+\usepackage{blkarray}
+\usepackage{subcaption}
+%% Import a package useful for displaying graphics.
+\usepackage{graphicx}
+\usepackage{quiver}
+
+% Comment the following line to use TeX's default font of Computer Modern.
+\usepackage{times,txfonts}
+
+% Adjust line spacing an indentation
+\parindent 0pt
+\parskip 6pt plus 1pt
+
+\newtheoremstyle{ex215}% name of the style to be used
+  {18pt}% measure of space to leave above the theorem. E.g.: 3pt
+  {12pt}% measure of space to leave below the theorem. E.g.: 3pt
+  {}% name of font to use in the body of the theorem
+  {}% measure of space to indent
+  {\bfseries}% name of head font
+  {:}% punctuation between head and body
+  {2ex}% space after theorem head; " " = normal interword space
+  {}% Manually specify head
+\theoremstyle{ex215} 
+
+\makeatletter
+\newtheorem*{lemmacore}{Lemma \@currentlabel}
+\newenvironment{lemma}[1]
+{\def\@currentlabel{#1}\lemmacore}
+{\endlemmacore}
+
+\newtheorem*{corollarycore}{Corollary \@currentlabel}
+\newenvironment{corollary}[1]
+{\def\@currentlabel{#1}\corollarycore}
+{\endcorollarycore}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Stuff for getting the name/document date/title across the header
+\RequirePackage{fancyhdr}
+\pagestyle{fancy}
+\fancyfoot[C]{\ifnum \value{page} > 1\relax\thepage\fi}
+\fancyhead[L]{\ifx\@doclabel\@empty\else\@doclabel\fi}
+\fancyhead[C]{\ifx\@docauthor\@empty\else\@docdate\fi}
+\fancyhead[R]{\ifx\@docauthor\@empty\@docdate\else\@docauthor\fi}
+\headheight 15pt
+
+
+\def\doclabel#1{\gdef\@doclabel{#1}}
+\doclabel{Use {\tt\textbackslash doclabel\{MY LABEL\}}.}
+\def\docdate#1{\gdef\@docdate{#1}}
+\docdate{Use {\tt\textbackslash docdate\{MY DATE\}}.}
+\def\docauthor#1{\gdef\@docauthor{#1}}
+%\docauthor{Use {\tt\textbackslash docauthor\{MY NAME\}}.}
+\let\@docauthor\@empty
+
+\newcounter{probcount}
+\newcounter{subprobcount}
+\newlength\probsep
+\newlength\pshrinking
+\newif\iffirstprob
+
+% The following commands allow for a handy override of labels in an enumeration,
+% without having the user keep track of what level the enumeration is happening at.
+% To use them, just put \listlabel{....} as the first command after a \begin{enumerate}.
+% The '....' is used to define the label.  You can access the name of the current label
+% counter with \thelistlabel.  Hence \listlabel{\textbf{\Alph{\thelistlabel}:}} would
+% generate lists with bold labels A:, B:, C:, etc.
+\newcommand{\listlabel}[1]{\def\thelistlabel{\@enumctr}%
+            \expandafter\def\csname label\@enumctr\endcsname{#1}}
+
+
+\newenvironment{subproblems}%
+  {\begin{enumerate}\listlabel{\alph{\thelistlabel})}%
+  %% Make the enumerate environment think we are making a list in a list:
+  \global \@newlistfalse}%
+  {\end{enumerate}}%
+
+\newenvironment{problems}%
+  {\ifhmode\unskip\par\fi\setcounter{probcount}{0}\probsep\parskip
+  \sbox\@tempboxa{\textbf{9.}}\pshrinking\wd\@tempboxa\advance\pshrinking\labelsep
+  \advance\linewidth -\pshrinking
+  \advance\@totalleftmargin\pshrinking
+  \advance\leftskip\pshrinking}%
+  {\ifhmode\unskip \par\fi\advance\leftskip-\pshrinking}%
+
+\newcommand{\problem}{%
+  \setcounter{subprobcount}{0}%
+  \stepcounter{probcount}%
+  \def\@currentlabel{\arabic{probcount}}%
+  \ifhmode
+    \unskip \par
+  \fi
+%  \addpenalty{-4000}%
+  \iffirstprob\else\addvspace\probsep\fi
+  \firstprobfalse
+  \hskip -\labelwidth\hskip -\labelsep 
+  \hbox to\labelwidth{\hss\textbf{\arabic{probcount}.}}\hskip\labelsep
+}%
+
+%% The localhead command puts a label on top of a paragraph -- handy for labels
+%% like "Solution:"
+\newskip\restoreparskip
+\newcommand{\localhead}[1]{\par\smallskip\textbf{#1}\nobreak\\}%
+%% The following arcane code was added to make the localhead enviroment get along
+%% with the ams theorem enviroment (which is based on the latex list enviroment).
+%% previously, the command was {\par\smallskip\textbf{#1}\\}, but the list
+%% enviroment would also add a par at the end of this paragraph, which would result
+%% in an extra blank line.  Our solution now is to put in our own par, but with
+%% none of the parskip glue that adds extra space between paragraphs.
+%%  \restoreparskip\parskip\parskip 0pt\par\nobreak\noindent\parskip\restoreparskip}%
+\newcommand\solution{\localhead{Solution:}}
+\newcommand\subsol{\stepcounter{subprobcount}\localhead{Solution, part \alph{subprobcount}:}}
+\newcommand\subsoleg[1]{\stepcounter{subprobcount}\par\textbf{Solution, part \alph{subprobcount}:} #1\\}
+\def\solver#1{(Solution by #1)\\\vskip-12pt}
+
+
+%% The default 'article' class has captions that label figures Figure 1, etc.  This is too 
+%% formal for homework sets, so we change \caption so that it just puts the caption text.
+%% Here I have just modified the \@makecaption command from the article class.
+%% Maybe I should change this in the future to let authors decide whether or not to label a figure.
+
+\long\def\@makecaption#1#2{%
+  \vskip\abovecaptionskip
+  \sbox\@tempboxa{#2}%
+  \ifdim \wd\@tempboxa >\hsize
+    #2\par
+  \else
+    \global \@minipagefalse
+    \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
+  \fi
+  \vskip\belowcaptionskip}
+
+%% The default implementation of the proof environment starts a new paragraph at the start of the proof,
+%% with the full parskip spacing. This only looks good following a theorem statement 
+%% if \parskip is set to zero.  We've got a medium sized parskip, so we overide this 
+%% questionable decision.
+\renewenvironment{proof}[1][\proofname]{\par
+  \pushQED{\qed}%
+  \normalfont \topsep6\p@\@plus6\p@\relax
+  \trivlist
+  \@topsep \topsep
+  \item[\hskip\labelsep
+        \itshape
+    #1\@addpunct{.}]\ignorespaces
+}{%
+  \popQED\endtrivlist\@endpefalse
+}
+\makeatother
+
+% Shortcuts for blackboard bold number sets (reals, integers, etc.)
+\newcommand{\Reals}{\ensuremath{\mathbb R}}
+\newcommand{\Nats}{\ensuremath{\mathbb N}}
+\newcommand{\Ints}{\ensuremath{\mathbb Z}}
+\newcommand{\Rats}{\ensuremath{\mathbb Q}}
+\newcommand{\Cplx}{\ensuremath{\mathbb C}}
+%% Some equivalents that some people may prefer.
+\let\RR\Reals
+\let\NN\Nats
+\let\II\Ints
+\let\CC\Cplx
+
+
+% The following commands set up the material that appears
+% in the header.
+\doclabel{Math 663: Homework 4}
+\docauthor{Glen Woodworth}
+\docdate{21 September 2021}
+
+\begin{document}
+\begin{problems}
+
+\problem 1.3.5. Count the copies of $P_3$ and $C_4$ in $Q_k$.
+
+\subsol
+$Q_K$ contains ${k\choose 2}2^{k-2}$ copies of $C_4$. To show this is true, we consider Example 1.3.8. for $j=2$. This example states that we can form a $2$-dimensional subcube by keeping any $k-2$ coordinates fixed and letting the values in the remaining $2$ coordinates range over all $2^2$ possible $2$-tuples. The subgraph induced by such a set of vertices is isomorphic to $Q_2$. Hence, there are $k\choose 2$ ways to pick 2 coordinates to vary and $2^{k-j}$ ways to specify the values in the fixed coordinates. Thus, we may conclude that there are ${k\choose 2}2^{k-2}$ such subcubes, and hence, the result follows because $Q_2$ is isomorphic to $C_4$. 
+\subsol
+$Q_k$ contains ${k\choose 2}2^{k}$ copies of $P_3$. Since each $C_4$ has 4 $P_3$s in it, we simply multiply the previous result by 4, which gives us the result. 
+\qed
+
+\problem 1.3.7. Determine the maximum number of edges in a bipartite subgraph of $P_n$, of $C_n$, and of $K_n$.
+\subsol
+For $G\subseteq P_n$, $e(G)\le n-1$. Consider the largest subgraph of $P_n$ without odd-cycles. It has $n-1$ edges. Thus, the result follows.
+\subsol
+For $G\subseteq C_n$, if $n$ is even, $e(G)\le n$, otherwise, $e(G)\le n-2$. If $n$ is even, then let $G=C_n$. Since $G$ has no odd cycle, it is bipartite with $n$ edges. If $n$ is odd, then let $v\in V(C_n)$ and let $G=C_n-v$. Then $G$ contains no odd cycle, and is thus bipartite. Since $v$ has degree 2, $C_n-v$ has $n-2$ vertices, so the result follows.
+\subsol
+For $G\subseteq K_n$, if $n$ is even, $e(G)\le n^2/4$. If $n$ is odd, $e(G)\le (n-1)^2/4$. Consider the largest bipartite subgraph without any odd cycles in $K_n$. If $n$ is even, this is $K_{\frac{n}{2},\frac{n}{2}}$, with $n^2/4$ edges. If $n$ is odd, this is $K_{\frac{n-1}{2},\frac{n-1}{2}}$, with $(n-1)^2/4$ edges.
+\qed
+
+\problem 1.3.8. Which of the following are graphic sequences? Provide a construction or a proof of impossibility for each.
+\begin{subproblems}
+\item $(5,5,4,3,2,2,2,1)$
+\item $(5,5,4,4,2,2,1,1)$
+\item $(5,5,5,3,2,2,1,1)$
+\item $(5,5,5,4,2,1,1,1)$
+\end{subproblems}
+
+\subsol
+Graphic. Reversing the Havel Hakimi Theorem, construct $(5,5,4,3,2,2,2,1)$ as follows:
+\begin{align*}
+(1,1,0,0,0) \\
+(2,1,1,1,1,0)\\
+(4,3,2,2,1,1,1)\\
+(5,5,4,3,2,2,2,1).\\
+\end{align*}
+\subsol
+Graphic.  Construct $(5,5,4,4,2,2,1,1)$ as follows:
+\begin{align*}
+(1,1,0,0,0)\\
+(2,2,1,1,0,0)\\
+(4,3,3,1,1,1,1)\\
+(5,5,4,4,2,2,1,1).\\
+\end{align*}
+\subsol
+Graphic.  Construct $(5,5,5,3,2,2,1,1)$ as follows:
+\begin{align*}
+(3,1,1,1,0,0) \\
+(4,4,2,1,1,1,1)\\
+(5,5,5,3,2,2,1,1).\\
+\end{align*}
+\subsol
+Not graphic. Following the Havel Hakimi Theorem, we have:
+\begin{align*}
+(5,5,5,4,2,1,1,1)\\
+(4,4,3,1,0,1,1)\\
+(3,2,1,0,0,0)\\
+(1,0,-1,0,0).\\
+\end{align*}
+The last degree sequence is not graphic, thus $(5,5,5,4,2,1,1,1)$ is not graphic.
+\qed
+\problem Exercise 1.3.40. Let $G$ be an $n$-vertex simple graph, where $n\ge 2$. Determine the maximum possible number of edges in $G$ under each of the following conditions. Note: Viewed a solution.
+\begin{subproblems}
+\item $G$ has an independent set of size $a$.
+\item $G$ has exactly $k$ components.
+\item $G$ is disconnected.
+\end{subproblems}
+
+\subsol
+Let $I\subseteq G$ with size $a$. Then $G=I\cup G\backslash I$. In order to maximize the number of edges in $G$, we maximize the number of edges in $G\backslash I$ as well as between $I$ and $G\backslash I$. The max$(e(G\backslash I)) = {n-a\choose 2}$. The max degree of each vertex in $I$ is $n-a$ because no vertex in $I$ can be connected to a vertex in $I$. Thus, the max number of edges in $G$ is ${n-a\choose 2} + (n-a)a$.
+\subsol
+If $G$ has $k$ components, we maximize the number of edges $G$ has by making one component complete and leaving the others to be isolated vertices. Thus, the only component with edges has $n-k+1$ vertices. So, $G$ has ${n-k+1\choose 2}$ edges. Now consider the n-vertex simple graph $G'$ with more edges than $G$. Suppose that $G'$ has two components with edges. Then there are two components in $G'$ with two or more vertices, call them $C$ and $C'$. Moving all but one of the vertices from $C'$ to $C$ does not change the number of components of $G'$. Suppose we do this, then ensure that $C$ is complete. But then this would raise $e(G')$ by at least one, since there will be at least one new adjacency. Thus, $G$ with $k$ components has maximal edges whenever one component is complete and the rest are isolated vertices.
+\subsol
+If $G$ is diconnected, then $\overline{G}$ is connected. By Proposition 1.3.13, the minimum number of edges in $\overline{G}$ is $n-1$. Thus, to fined max$(e(G))$, we find the total edges possible for a graph with $n$ vertices and subtract $n-1$ from it: max$(e(G))\le {n\choose 2}-(n-1)$. 
+\qed
+
+\problem Exercise 1.3.57: Let $n$ be a positive integer. Let $d$ be a list of $n$ nonnegative integers with even sum whose largest entry is less than $n$ and differs from the smallest entry by at most 1. Prove that $d$ is graphic.
+\solution
+Let $\Delta =$max$(d)$ and let $\delta =$min$(d)$. We proceed using induction on the $n$. First, the base case. If n=1, then $d=[0]$, which satisfies the conditions.  Now the inductive step. Suppose the result is true for some $k>0$. We must show it true for $k+1$. Since $\Delta<n$, applying Havel-Hakimi yields:   $d=[\Delta -1]$
+
+
+\problem 2.1.2. Let $G$ be a graph.
+\begin{subproblems}
+\item Prove that $G$ is a tree if and only if $G$ is connected and every edge is a cut edge.
+\item Prove that $G$ is a tree if and only if adding any edge with endpoints in $V(G)$ creates exactly one cycle
+\end{subproblems}
+
+\subsol
+$\rightarrow$
+Suppose $G$ is a tree. By definition, $G$ is connected. By Corollary 2.1.5., every edge of a tree is a cut-edge, as desired.
+$\leftarrow$
+Suppose $G$ is connected and every edge is a cut-edge. Then for $u,v\in G$, there exists a $u v$-path. Since every edge is a cut edge, this path must be unique. If it were not unique, there would be a cut-edge separating partite sets.
+
+\subsol
+$\rightarrow$
+Suppose $G$ is a tree. If we add any edge with endpoints in $V(G)$, we will create exactly one cycle because $G$ is connected and every $uv$-path $\in G$ is unique.
+$\leftarrow$ Suppose adding any edge, $uv$, with endpoints in $V(G)$ creates exactly one cycle in $G+uv$. Then $G-uv$ has no cycles, so $G$ is a tree. 
+ \qed
+
+\problem 2.1.5 Let $G$ be a graph. Prove that a maximal acyclic subgraph of $G$ consists of a spanning tree from each component of $G$.
+\solution
+Suppose $G=G_1\cup G_2\cup...G_k$, where $k$ is a positive integer. Suppose some component of $G$, $G_i$, $1\le i\le k$, has $n$ vertices. Then the maximal acyclic subgraph of $G_i$ happens whenever $G_i$ is connected and has $n-1$ edges, which spans all $n$ vertices of $G_i$ and is guaranteed to exist by Corollary 2.1.5. The same follows for every component of $G$ because $G_i$ was picked arbitrarily. Since G is maximized when each component is maximized, the result follows.
+\qed
+
+\problem 2.1.6. Let $T$ be a tree with average degree $a$. In terms of $a$, determine $n(T)$.
+\solution
+Let $n=n(T)$ and $k=e(T)$. Then, by Theorem 2.1.4., $n-1=k$. Thus, we have:
+\begin{align*}
+\frac{2k}{n}&=a\\
+\frac{2(n-1)}{n}&=a\\
+2n-2&=an\\
+-2&=n(a-2)\\
+\frac{-2}{a-2}&=n\\
+\frac{2}{2-a}&=n\\
+\end{align*}
+\qed
+\end{problems}
+\end{document}

@@ -1,0 +1,9 @@
+\beamer@sectionintoc {1}{Introduction}{3}{0}{1}
+\beamer@sectionintoc {2}{Convolution}{4}{0}{2}
+\beamer@sectionintoc {3}{Convolution Example (1)}{5}{0}{3}
+\beamer@sectionintoc {4}{Convolution Example (2)}{6}{0}{4}
+\beamer@sectionintoc {5}{Matrix Representation of an Image}{8}{0}{5}
+\beamer@sectionintoc {6}{Convolutional Image Processing}{9}{0}{6}
+\beamer@sectionintoc {7}{Convolutional Neural Networks}{10}{0}{7}
+\beamer@sectionintoc {8}{A Convolutional Neural Network}{11}{0}{8}
+\beamer@sectionintoc {9}{Current Applications}{12}{0}{9}

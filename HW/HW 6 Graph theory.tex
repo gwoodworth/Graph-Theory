@@ -1,0 +1,258 @@
+\documentclass[12pt]{article}
+
+\usepackage{amssymb,amsmath,amsthm}
+\usepackage[top=1in, bottom=1in, left=1.25in, right=1.25in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{enumerate}
+\usepackage{color}
+\usepackage{quiver}
+\usepackage{blkarray}
+\usepackage{subcaption}
+%% Import a package useful for displaying graphics.
+\usepackage{graphicx}
+\usepackage{quiver}
+
+% Comment the following line to use TeX's default font of Computer Modern.
+\usepackage{times,txfonts}
+
+% Adjust line spacing an indentation
+\parindent 0pt
+\parskip 6pt plus 1pt
+
+\newtheoremstyle{ex215}% name of the style to be used
+  {18pt}% measure of space to leave above the theorem. E.g.: 3pt
+  {12pt}% measure of space to leave below the theorem. E.g.: 3pt
+  {}% name of font to use in the body of the theorem
+  {}% measure of space to indent
+  {\bfseries}% name of head font
+  {:}% punctuation between head and body
+  {2ex}% space after theorem head; " " = normal interword space
+  {}% Manually specify head
+\theoremstyle{ex215} 
+
+\makeatletter
+\newtheorem*{lemmacore}{Lemma \@currentlabel}
+\newenvironment{lemma}[1]
+{\def\@currentlabel{#1}\lemmacore}
+{\endlemmacore}
+
+\newtheorem*{corollarycore}{Corollary \@currentlabel}
+\newenvironment{corollary}[1]
+{\def\@currentlabel{#1}\corollarycore}
+{\endcorollarycore}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Stuff for getting the name/document date/title across the header
+\RequirePackage{fancyhdr}
+\pagestyle{fancy}
+\fancyfoot[C]{\ifnum \value{page} > 1\relax\thepage\fi}
+\fancyhead[L]{\ifx\@doclabel\@empty\else\@doclabel\fi}
+\fancyhead[C]{\ifx\@docauthor\@empty\else\@docdate\fi}
+\fancyhead[R]{\ifx\@docauthor\@empty\@docdate\else\@docauthor\fi}
+\headheight 15pt
+
+
+\def\doclabel#1{\gdef\@doclabel{#1}}
+\doclabel{Use {\tt\textbackslash doclabel\{MY LABEL\}}.}
+\def\docdate#1{\gdef\@docdate{#1}}
+\docdate{Use {\tt\textbackslash docdate\{MY DATE\}}.}
+\def\docauthor#1{\gdef\@docauthor{#1}}
+%\docauthor{Use {\tt\textbackslash docauthor\{MY NAME\}}.}
+\let\@docauthor\@empty
+
+\newcounter{probcount}
+\newcounter{subprobcount}
+\newlength\probsep
+\newlength\pshrinking
+\newif\iffirstprob
+
+% The following commands allow for a handy override of labels in an enumeration,
+% without having the user keep track of what level the enumeration is happening at.
+% To use them, just put \listlabel{....} as the first command after a \begin{enumerate}.
+% The '....' is used to define the label.  You can access the name of the current label
+% counter with \thelistlabel.  Hence \listlabel{\textbf{\Alph{\thelistlabel}:}} would
+% generate lists with bold labels A:, B:, C:, etc.
+\newcommand{\listlabel}[1]{\def\thelistlabel{\@enumctr}%
+            \expandafter\def\csname label\@enumctr\endcsname{#1}}
+
+
+\newenvironment{subproblems}%
+  {\begin{enumerate}\listlabel{\alph{\thelistlabel})}%
+  %% Make the enumerate environment think we are making a list in a list:
+  \global \@newlistfalse}%
+  {\end{enumerate}}%
+
+\newenvironment{problems}%
+  {\ifhmode\unskip\par\fi\setcounter{probcount}{0}\probsep\parskip
+  \sbox\@tempboxa{\textbf{9.}}\pshrinking\wd\@tempboxa\advance\pshrinking\labelsep
+  \advance\linewidth -\pshrinking
+  \advance\@totalleftmargin\pshrinking
+  \advance\leftskip\pshrinking}%
+  {\ifhmode\unskip \par\fi\advance\leftskip-\pshrinking}%
+
+\newcommand{\problem}{%
+  \setcounter{subprobcount}{0}%
+  \stepcounter{probcount}%
+  \def\@currentlabel{\arabic{probcount}}%
+  \ifhmode
+    \unskip \par
+  \fi
+%  \addpenalty{-4000}%
+  \iffirstprob\else\addvspace\probsep\fi
+  \firstprobfalse
+  \hskip -\labelwidth\hskip -\labelsep 
+  \hbox to\labelwidth{\hss\textbf{\arabic{probcount}.}}\hskip\labelsep
+}%
+
+%% The localhead command puts a label on top of a paragraph -- handy for labels
+%% like "Solution:"
+\newskip\restoreparskip
+\newcommand{\localhead}[1]{\par\smallskip\textbf{#1}\nobreak\\}%
+%% The following arcane code was added to make the localhead enviroment get along
+%% with the ams theorem enviroment (which is based on the latex list enviroment).
+%% previously, the command was {\par\smallskip\textbf{#1}\\}, but the list
+%% enviroment would also add a par at the end of this paragraph, which would result
+%% in an extra blank line.  Our solution now is to put in our own par, but with
+%% none of the parskip glue that adds extra space between paragraphs.
+%%  \restoreparskip\parskip\parskip 0pt\par\nobreak\noindent\parskip\restoreparskip}%
+\newcommand\solution{\localhead{Solution:}}
+\newcommand\subsol{\stepcounter{subprobcount}\localhead{Solution, part \alph{subprobcount}:}}
+\newcommand\subsoleg[1]{\stepcounter{subprobcount}\par\textbf{Solution, part \alph{subprobcount}:} #1\\}
+\def\solver#1{(Solution by #1)\\\vskip-12pt}
+
+
+%% The default 'article' class has captions that label figures Figure 1, etc.  This is too 
+%% formal for homework sets, so we change \caption so that it just puts the caption text.
+%% Here I have just modified the \@makecaption command from the article class.
+%% Maybe I should change this in the future to let authors decide whether or not to label a figure.
+
+\long\def\@makecaption#1#2{%
+  \vskip\abovecaptionskip
+  \sbox\@tempboxa{#2}%
+  \ifdim \wd\@tempboxa >\hsize
+    #2\par
+  \else
+    \global \@minipagefalse
+    \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
+  \fi
+  \vskip\belowcaptionskip}
+
+%% The default implementation of the proof environment starts a new paragraph at the start of the proof,
+%% with the full parskip spacing. This only looks good following a theorem statement 
+%% if \parskip is set to zero.  We've got a medium sized parskip, so we overide this 
+%% questionable decision.
+\renewenvironment{proof}[1][\proofname]{\par
+  \pushQED{\qed}%
+  \normalfont \topsep6\p@\@plus6\p@\relax
+  \trivlist
+  \@topsep \topsep
+  \item[\hskip\labelsep
+        \itshape
+    #1\@addpunct{.}]\ignorespaces
+}{%
+  \popQED\endtrivlist\@endpefalse
+}
+\makeatother
+
+% Shortcuts for blackboard bold number sets (reals, integers, etc.)
+\newcommand{\Reals}{\ensuremath{\mathbb R}}
+\newcommand{\Nats}{\ensuremath{\mathbb N}}
+\newcommand{\Ints}{\ensuremath{\mathbb Z}}
+\newcommand{\Rats}{\ensuremath{\mathbb Q}}
+\newcommand{\Cplx}{\ensuremath{\mathbb C}}
+%% Some equivalents that some people may prefer.
+\let\RR\Reals
+\let\NN\Nats
+\let\II\Ints
+\let\CC\Cplx
+
+
+% The following commands set up the material that appears
+% in the header.
+\doclabel{Math 663: HW 7}
+\docauthor{Glen Woodworth}
+\docdate{19 October 2021}
+
+\begin{document}
+\begin{problems}
+
+\problem 2.3.2. Determine which trees have Prufer codes that
+\begin{subproblems}
+\item contain only one value,
+\item contain exactly two values, or
+\item have distinct values in all positions. 
+\end{subproblems}
+
+\subsol
+Stars have only one value in their Prufer code.
+\subsol
+Double brooms have exactly two values in their Prufer code. 
+\subsol
+Trees with only two leaves have distinct values in all positions of their Prufer code.
+
+\problem 2.2.7. Use Cayley's Formula to prove that the graph obtained from $K_n$ by deleting an edge has $(n-2)n^{n-3}$ spanning trees.
+
+\solution
+Consider the endpoints $u$ and $v$ of the edge that is deleted from $K_n$. Then $d(u)=d(v)=n-2$. Without loss of generality, suppose we delete $v$. The resulting graph is $K_{n-1}$, which has $2^{n-3}$ spanning trees by Cayley's Formula. Adding back $v$ and the $n-2$ edges incident to it yields the original graph. Hence, since there are $n-2$ possibilities for connecting $v$ to the spanning trees in $K_{n-1}$, the original graph has $(n-2)2^{n-3}$ spanning trees.
+\qed
+
+\problem 2.2.8. Count the following sets of trees with vertex set $[n]$, giving two proofs for each: one using the Prufer correspondence and one by direct counting arguments
+\begin{subproblems}
+\item trees that have 2 leaves
+\item trees that have n-2 leaves
+\end{subproblems}
+\subsol
+First, direct counting. A tree with exactly 2 leaves on $n$ vertices is $P_n$. Thus, there are $n!$ ways to arrange the vertices. Since reversing the order of the vertices produces the same tree, there are $n!/2$ trees with vertex set $[n]$ that have 2 leaves. Now, the Prufer correspondence counting. Note that all the entries of the Prufer code will be distinct. Then, applying the Prufer code, there are $n$ options for the first entry, then $n-1$ choices for the next one, and $n-3$ for the next, etc. This continues until there are 2 vertices left. Hence, there a $n!/2$ trees that have 2 leaves.
+\subsol
+First, Prufer correspondence counting. Note that trees that have $n-2$ leaves are double brooms. Thus, there are exactly two values in the Prufer code. There are $n$ options for the first entry, then $n-1$ options for the second entry. For the remaining $n-4$ slots in the Prufer code, each has 2 choices. Hence, there are $n(n-1)2^{n-4}$ trees that have $n-2$ leaves. Now we count directly. There are $n\choose 2$ ways to pick the two centers of the double broom. There are $n-2$ neighboring vertices left to assign. There are 2 choices for each neighbor, either one center or the other. Yet, since flipping the graph over its double center produces the same graph, ${n\choose2 }2^{n-2}$ overcounts by a factor of $2$. Hence, there are ${n\choose2 }2^{n-3}$ trees that have $n-2$ leaves, which equivalent to the result from Prufer correspondence.
+\qed
+
+\problem 2.3.2. Prove or disprove: If $T$ is a minimum-weight spanning tree of a weighted graph $G$, then the $u,v$-path in $T$ is a minimum-weight $u,v$-path in $G$.  
+\solution
+False. Let $G$ be the graph below. $T=\{vw,ws,st,tu\}$ is a minimum weight spanning tree for $G$. Yet, on $T$, $d(u,v)=7$ while on $G$, $d(u,v)=5$.
+% https://q.uiver.app/?q=WzAsNSxbMCwxLCJ0IFxcYnVsbGV0Il0sWzEsMCwiXFxidWxsZXQgdSJdLFsyLDEsIlxcYnVsbGV0IHciXSxbMywxLCJcXGJ1bGxldCB2Il0sWzEsMiwiXFxidWxsZXQgcyJdLFswLDQsIjEiLDIseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzQsMiwiMSIsMix7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMiwzLCIzIiwyLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFsyLDEsIjIiLDIseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzAsMSwiMiIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XV0=
+\[\begin{tikzcd}
+	& {\bullet u} \\
+	{t \bullet} && {\bullet w} & {\bullet v} \\
+	& {\bullet s}
+	\arrow["1"', no head, from=2-1, to=3-2]
+	\arrow["1"', no head, from=3-2, to=2-3]
+	\arrow["3"', no head, from=2-3, to=2-4]
+	\arrow["2"', no head, from=2-3, to=1-2]
+	\arrow["2", no head, from=2-1, to=1-2]
+\end{tikzcd}\]
+\qed
+\problem
+2.3.4. In the graph below, assign weights (1,1,2,2,3,3,4,4) in two ways one way so that the minimum-weight spanning tree is unique, and another way so that the minimum-weight spanning tree is not unique.
+\solution
+In the left graph below, $T=\{ab,bc,ce,cd\}$ and $T'=\{ab,bc,cd,de\}$ are distinct minimum weight spanning trees. In the right graph below, $T'=\{ab,bc,cd,de\}$ is the only minimum weight spanning tree.
+% https://q.uiver.app/?q=WzAsMTEsWzAsMSwiYVxcYnVsbGV0Il0sWzIsMSwiXFxidWxsZXQgYiJdLFswLDMsImQgXFxidWxsZXQiXSxbMiwzLCJcXGJ1bGxldCBjIl0sWzEsMiwiZVxcYnVsbGV0Il0sWzAsMF0sWzMsMSwiYVxcYnVsbGV0Il0sWzUsMSwiXFxidWxsZXQgYiJdLFs1LDMsIlxcYnVsbGV0IGMiXSxbMywzLCJkXFxidWxsZXQiXSxbNCwyLCJlXFxidWxsZXQiXSxbMCwxLCIxIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFsxLDMsIjEiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzIsMywiMiIsMix7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMiwwLCIyIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFswLDQsIjQiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzQsMywiMyIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbNCwxLCI0IiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs0LDIsIjMiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzYsMTAsIjQiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzcsMTAsIjQiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzcsNiwiMSIsMix7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbOSw2LCIzIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs5LDgsIjIiLDIseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzgsNywiMSIsMix7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbOCwxMCwiMyIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMTAsOSwiMiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XV0=
+\[\begin{tikzcd}
+	{} \\
+	a\bullet && {\bullet b} & a\bullet && {\bullet b} \\
+	& e\bullet &&& e\bullet \\
+	{d \bullet} && {\bullet c} & d\bullet && {\bullet c}
+	\arrow["1", no head, from=2-1, to=2-3]
+	\arrow["1", no head, from=2-3, to=4-3]
+	\arrow["2"', no head, from=4-1, to=4-3]
+	\arrow["2", no head, from=4-1, to=2-1]
+	\arrow["4"{description}, no head, from=2-1, to=3-2]
+	\arrow["3"{description}, no head, from=3-2, to=4-3]
+	\arrow["4"{description}, no head, from=3-2, to=2-3]
+	\arrow["3"{description}, no head, from=3-2, to=4-1]
+	\arrow["4"{description}, no head, from=2-4, to=3-5]
+	\arrow["4"{description}, no head, from=2-6, to=3-5]
+	\arrow["1"', no head, from=2-6, to=2-4]
+	\arrow["3", no head, from=4-4, to=2-4]
+	\arrow["2"', no head, from=4-4, to=4-6]
+	\arrow["1"', no head, from=4-6, to=2-6]
+	\arrow["3"{description}, no head, from=4-6, to=3-5]
+	\arrow["2"{description}, no head, from=3-5, to=4-4]
+\end{tikzcd}\]
+\problem 2.3.9. Let $F$ be a spanning forest of a connected weighted graph $G$. Among all edges of $G$ having endpoints in different components of $F$, let $e$ be one of minimum weight. Prove that among all the spanning trees of $G$ that contain $F$, there is one of minimum weight that contains $e$. Use this to give another proof that Kruskal's Algorithm works.
+\solution 
+Let $T$ be a minimum weight spanning forest containing $F$. Consider two components, $C$ and $C'$ of $F$ connected by $e$ in $G$. If $T$ connects $C$ to $C'$ directly, then it either uses $e$ or another edge with the same weight as $e$. Without loss of generality, suppose in that case that $T$ uses $e$. Then, to connect $C$ to $C'$, $T$ either uses $e$ or there is a path through other components of $F$ not containing $e$ of equal or lesser weight compared to $e$. Hence, a path from $C$ to $C'$ in $T$ that doesn't use $e$ must go through other components using connecting edges that have weights equal to or greater than the weight of $e$. Even if the edges between components of $F$ that $T$ uses are of the same weight as $e$, $T$ would have to use at least two of them to connect $C$ to $C'$ because it is moving through at least one extra component in $F$. Hence, this path will be of more weight than a path containing $e$. Therefore, T is a minimum weight spanning tree containing $F$ that contains $e$. To show that Kruskal's algorithm works, we consider a spanning forest $F$ of $G$ that has no edges. This is the same start as Kruskal's algorithm. Then, we add an edge $e$ that reduces the number of components in $F$ and is of minimum weight. By the above proof, there must be a minimum weight spanning tree containing $e$. This will be true for each step of Kruskal's algorithm by the above proof. Hence, Kruskal's algorithm must be true.
+\end{problems}
+\end{document}

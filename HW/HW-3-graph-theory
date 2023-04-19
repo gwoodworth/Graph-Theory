@@ -1,0 +1,295 @@
+\documentclass[12pt]{article}
+
+\usepackage{amssymb,amsmath,amsthm}
+\usepackage[top=1in, bottom=1in, left=1.25in, right=1.25in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{enumerate}
+\usepackage{color}
+\usepackage{quiver}
+\usepackage{blkarray}
+\usepackage{subcaption}
+%% Import a package useful for displaying graphics.
+\usepackage{graphicx}
+\usepackage{quiver}
+
+% Comment the following line to use TeX's default font of Computer Modern.
+\usepackage{times,txfonts}
+
+% Adjust line spacing an indentation
+\parindent 0pt
+\parskip 6pt plus 1pt
+
+\newtheoremstyle{ex215}% name of the style to be used
+  {18pt}% measure of space to leave above the theorem. E.g.: 3pt
+  {12pt}% measure of space to leave below the theorem. E.g.: 3pt
+  {}% name of font to use in the body of the theorem
+  {}% measure of space to indent
+  {\bfseries}% name of head font
+  {:}% punctuation between head and body
+  {2ex}% space after theorem head; " " = normal interword space
+  {}% Manually specify head
+\theoremstyle{ex215} 
+
+\makeatletter
+\newtheorem*{lemmacore}{Lemma \@currentlabel}
+\newenvironment{lemma}[1]
+{\def\@currentlabel{#1}\lemmacore}
+{\endlemmacore}
+
+\newtheorem*{corollarycore}{Corollary \@currentlabel}
+\newenvironment{corollary}[1]
+{\def\@currentlabel{#1}\corollarycore}
+{\endcorollarycore}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Stuff for getting the name/document date/title across the header
+\RequirePackage{fancyhdr}
+\pagestyle{fancy}
+\fancyfoot[C]{\ifnum \value{page} > 1\relax\thepage\fi}
+\fancyhead[L]{\ifx\@doclabel\@empty\else\@doclabel\fi}
+\fancyhead[C]{\ifx\@docauthor\@empty\else\@docdate\fi}
+\fancyhead[R]{\ifx\@docauthor\@empty\@docdate\else\@docauthor\fi}
+\headheight 15pt
+
+
+\def\doclabel#1{\gdef\@doclabel{#1}}
+\doclabel{Use {\tt\textbackslash doclabel\{MY LABEL\}}.}
+\def\docdate#1{\gdef\@docdate{#1}}
+\docdate{Use {\tt\textbackslash docdate\{MY DATE\}}.}
+\def\docauthor#1{\gdef\@docauthor{#1}}
+%\docauthor{Use {\tt\textbackslash docauthor\{MY NAME\}}.}
+\let\@docauthor\@empty
+
+\newcounter{probcount}
+\newcounter{subprobcount}
+\newlength\probsep
+\newlength\pshrinking
+\newif\iffirstprob
+
+% The following commands allow for a handy override of labels in an enumeration,
+% without having the user keep track of what level the enumeration is happening at.
+% To use them, just put \listlabel{....} as the first command after a \begin{enumerate}.
+% The '....' is used to define the label.  You can access the name of the current label
+% counter with \thelistlabel.  Hence \listlabel{\textbf{\Alph{\thelistlabel}:}} would
+% generate lists with bold labels A:, B:, C:, etc.
+\newcommand{\listlabel}[1]{\def\thelistlabel{\@enumctr}%
+            \expandafter\def\csname label\@enumctr\endcsname{#1}}
+
+
+\newenvironment{subproblems}%
+  {\begin{enumerate}\listlabel{\alph{\thelistlabel})}%
+  %% Make the enumerate environment think we are making a list in a list:
+  \global \@newlistfalse}%
+  {\end{enumerate}}%
+
+\newenvironment{problems}%
+  {\ifhmode\unskip\par\fi\setcounter{probcount}{0}\probsep\parskip
+  \sbox\@tempboxa{\textbf{9.}}\pshrinking\wd\@tempboxa\advance\pshrinking\labelsep
+  \advance\linewidth -\pshrinking
+  \advance\@totalleftmargin\pshrinking
+  \advance\leftskip\pshrinking}%
+  {\ifhmode\unskip \par\fi\advance\leftskip-\pshrinking}%
+
+\newcommand{\problem}{%
+  \setcounter{subprobcount}{0}%
+  \stepcounter{probcount}%
+  \def\@currentlabel{\arabic{probcount}}%
+  \ifhmode
+    \unskip \par
+  \fi
+%  \addpenalty{-4000}%
+  \iffirstprob\else\addvspace\probsep\fi
+  \firstprobfalse
+  \hskip -\labelwidth\hskip -\labelsep 
+  \hbox to\labelwidth{\hss\textbf{\arabic{probcount}.}}\hskip\labelsep
+}%
+
+%% The localhead command puts a label on top of a paragraph -- handy for labels
+%% like "Solution:"
+\newskip\restoreparskip
+\newcommand{\localhead}[1]{\par\smallskip\textbf{#1}\nobreak\\}%
+%% The following arcane code was added to make the localhead enviroment get along
+%% with the ams theorem enviroment (which is based on the latex list enviroment).
+%% previously, the command was {\par\smallskip\textbf{#1}\\}, but the list
+%% enviroment would also add a par at the end of this paragraph, which would result
+%% in an extra blank line.  Our solution now is to put in our own par, but with
+%% none of the parskip glue that adds extra space between paragraphs.
+%%  \restoreparskip\parskip\parskip 0pt\par\nobreak\noindent\parskip\restoreparskip}%
+\newcommand\solution{\localhead{Solution:}}
+\newcommand\subsol{\stepcounter{subprobcount}\localhead{Solution, part \alph{subprobcount}:}}
+\newcommand\subsoleg[1]{\stepcounter{subprobcount}\par\textbf{Solution, part \alph{subprobcount}:} #1\\}
+\def\solver#1{(Solution by #1)\\\vskip-12pt}
+
+
+%% The default 'article' class has captions that label figures Figure 1, etc.  This is too 
+%% formal for homework sets, so we change \caption so that it just puts the caption text.
+%% Here I have just modified the \@makecaption command from the article class.
+%% Maybe I should change this in the future to let authors decide whether or not to label a figure.
+
+\long\def\@makecaption#1#2{%
+  \vskip\abovecaptionskip
+  \sbox\@tempboxa{#2}%
+  \ifdim \wd\@tempboxa >\hsize
+    #2\par
+  \else
+    \global \@minipagefalse
+    \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
+  \fi
+  \vskip\belowcaptionskip}
+
+%% The default implementation of the proof environment starts a new paragraph at the start of the proof,
+%% with the full parskip spacing. This only looks good following a theorem statement 
+%% if \parskip is set to zero.  We've got a medium sized parskip, so we overide this 
+%% questionable decision.
+\renewenvironment{proof}[1][\proofname]{\par
+  \pushQED{\qed}%
+  \normalfont \topsep6\p@\@plus6\p@\relax
+  \trivlist
+  \@topsep \topsep
+  \item[\hskip\labelsep
+        \itshape
+    #1\@addpunct{.}]\ignorespaces
+}{%
+  \popQED\endtrivlist\@endpefalse
+}
+\makeatother
+
+% Shortcuts for blackboard bold number sets (reals, integers, etc.)
+\newcommand{\Reals}{\ensuremath{\mathbb R}}
+\newcommand{\Nats}{\ensuremath{\mathbb N}}
+\newcommand{\Ints}{\ensuremath{\mathbb Z}}
+\newcommand{\Rats}{\ensuremath{\mathbb Q}}
+\newcommand{\Cplx}{\ensuremath{\mathbb C}}
+%% Some equivalents that some people may prefer.
+\let\RR\Reals
+\let\NN\Nats
+\let\II\Ints
+\let\CC\Cplx
+
+
+% The following commands set up the material that appears
+% in the header.
+\doclabel{Math 663: Homework 3}
+\docauthor{Glen Woodworth}
+\docdate{14 September 2021}
+
+\begin{document}
+\begin{problems}
+
+\problem 1.3.4 Corollary. In a graph $G$ the average vertex degree is $\frac{2e(G)}{n(G)}$, and hence $\delta(G)\le\frac{2e(G)}{n(G)}\le\Delta(G)$.
+
+\solution 
+\qed
+
+\problem 1.3.5 Corollary. Every graph has an even number of vertices of odd degree. No graph of odd order is regular with odd degree.
+\solution 
+We proceed by proof by contradiction. Suppose $G$ has an odd number of vertices of odd degree. We can split the sum of the degrees of the vertices of $G$ into even and odd. Let $j,k,m,n\in\Nats$, where $n$ is odd. Observe:
+\begin{align*}
+\sum\limits_{v\in V(G)} d(v)&=(2k_1+1)+(2k_2+1)+...+(2k_n+1)+2j_1+2j_2+...+2j_m\\
+&=2(k_1+k_2+...+k_n+\frac{n-1}{2}+j_1+j_2+...+j_m)+1
+\end{align*}
+By the Degree-Sum Formula, $\sum\limits_{v\in V(G)} d(v)$ is even, so this is a contradiction, and the result follows. \qed
+
+\problem 1.3.6 Corollary. A $k$-regular graph with $n$ vertices has $nk/2$ edges.
+
+\solution
+Let $G$ be a $k$-regular graph with $n$ vertices. Then $\sum\limits_{v\in V(G)} d(v)=nk$. By the Degree-Sum Formula, $\sum\limits_{v\in V(G)} d(v)=2e(G)$. Setting the two equal and solving for $e(g)$ yields:
+\[
+e(G)=\frac{nk}{2}
+\]
+as desired.
+  \qed
+
+\problem Exercise 1.3.1. Prove or disprove: If $u$ and $v$ are the only vertices of odd degree in a graph $G$, then contains a $u,v$-path.
+
+\solution
+True. We proceed using proof by contradiction. Let $u$ and $v$ be the only vertices of odd degree in a graph $G$. Suppose there is no $u,v$-path. Then $u$ and $v$ must be in different components of $G$. Each of these components is a graph with an odd number of odd vertices. This contradicts Corollary 1.3.5. Thus, $G$ contains a $u,v$-path.
+\qed
+\problem Exercise 1.3.3: Let $u$ and $v$ be adjacent in a simple graph $G$. Prove that $uv$ belongs to at least $d(u)+d(v)-n(G)$ triangles in $G$.
+\solution
+Let $u$ and $v$ be adjacent in a simple graph $G$. We proceed using proof by cases. We discuss the three possible cases for adding vertices to $G$. In the first case, suppose we add a vertex to $G$ that is adjacent to both $u$ and $v$, creating $G'$, $u'$, and $v'$. Then $u'v'$ in $G'$ belongs to one more triangle than $uv$ in $G$ Notice that $d(u')=d(u)+1$, $d(v')=d(v)+1$, and $n(G')=n(G)+1$. Observe:
+\begin{align*}
+d(u')+d(v')-n(G')&=d(u)+1+d(v)+1-(n(g)+1)\\
+&=(d(u)+d(v)-n(G))+1
+\end{align*}
+as desired. In the second case, suppose we create $G$ with $u''$ and $v''$ by adding a vertex to $G$ that is adjacent to either $u$ or $v$, but not both. Then $u''v''$ belongs to the same amount of triangles as $uv$. In this case, $d(u'')+d(v'')=d(u)+d(v)+1$, while $n(G'')=n(G)+1$. Thus, 
+\begin{align*}
+d(u'')+d(v'')-n(G'')&=d(u)+d(v)+1-(n(G)+1)\\
+&=d(u)+d(v)-n(G)
+\end{align*}
+as desired. Thus, we have shown that whenever we add a vertex adjacent to either $u$ or $v$ or both, the formula $d(u)+d(v)-n(G)$ either increases or stays the same to appropriately represent the least number of triangles $uv$ belongs to. In the third and final case, suppose we add a vertex to $G$ that is not adjacent to either $u$ or $v$, creating $G'''$ with $u'''$ and $v'''$. This case will show that the formula in question is only a lower bound and does not track the number of triangles $uv$ belongs to exactly. In this case $d(u)=d(u''')$ and $d(v)=d(v''')$. Therefore, $uv$ belongs to the same amount of triangles as $u'''v'''$. Since $n(G''')=n(G)+1$, we have:
+\begin{align*}
+d(u''')+d(v''')-n(G''')&=d(u)+d(v)-(n(G)+1)\\
+&=d(u)+d(v)-n(G)-1.
+\end{align*}
+Thus, even though $uv$ and $u'''v'''$ belong to the same amount of triangles, whenever they belong to one triangle or more, respectively, our formula has a smaller lower bound for the number of triangles that $u'''v'''$ belongs to. Therefore, since all cases have been considered, the result follows.
+\qed
+\problem 1.3.12: Prove that an even graph has no cut-edge. For each $k\ge 1$ construct a $2k+1$-regular simple graph having a cut edge.
+\solution
+We proceed by proof by contradiction. Suppose $G$ is an even graph with cut edge $uv$. Let the vertex degrees for $G$ be $d_1,...,d_n$. Then the vertex degrees for $G-uv$ is $d_1,...,d_u-1,...,d_v-1,...d_n$. Since $uv$ is a cut-edge of $G$, $u$ and $v$ are in different components of $G-uv$. Since $G$ is even, every vertex, including $u$ and $v$, is even, which means $d_u-1$ and $d_v-1$ are odd. Thus the degree sum of the vertices in the components containing $u$ and $v$, respectively, will be odd. This is a contradiction because by Proposition 1.3.28., the degree sum must be odd. The result follows.
+ Now, for each $k\ge 1$, to construct a $2k+1$-regular simple graph having a cut edge we simply take two $K_{2(k+1)}$, put a new vertex on an exterior edge of each, $v$ on one and $v'$ on the other, then put in the edge $vv'$. For $k=1$, see below:
+ % https://q.uiver.app/?q=WzAsMTAsWzAsMCwiXFxidWxsZXQiXSxbMCwyLCJcXGJ1bGxldCJdLFsxLDIsIlxcYnVsbGV0Il0sWzEsMCwiXFxidWxsZXQiXSxbMSwxLCJ2XFwgXFxidWxsZXQiXSxbMiwxLCJcXGJ1bGxldFxcIHYnIl0sWzIsMCwiXFxidWxsZXQiXSxbMiwyLCJcXGJ1bGxldCJdLFszLDIsIlxcYnVsbGV0Il0sWzMsMCwiXFxidWxsZXQiXSxbMCwxLCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzMsMSwiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFswLDIsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMCwzLCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzEsMiwiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFszLDQsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbNCwyLCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzYsOSwiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs4LDcsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbNSw3LCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzUsNiwiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs5LDgsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbNSw0LCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzYsOCwiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs5LDcsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XV0=
+\[\begin{tikzcd}
+	\bullet & \bullet & \bullet & \bullet \\
+	& {v\ \bullet} & {\bullet\ v'} \\
+	\bullet & \bullet & \bullet & \bullet
+	\arrow[no head, from=1-1, to=3-1]
+	\arrow[no head, from=1-2, to=3-1]
+	\arrow[no head, from=1-1, to=3-2]
+	\arrow[no head, from=1-1, to=1-2]
+	\arrow[no head, from=3-1, to=3-2]
+	\arrow[no head, from=1-2, to=2-2]
+	\arrow[no head, from=2-2, to=3-2]
+	\arrow[no head, from=1-3, to=1-4]
+	\arrow[no head, from=3-4, to=3-3]
+	\arrow[no head, from=2-3, to=3-3]
+	\arrow[no head, from=2-3, to=1-3]
+	\arrow[no head, from=1-4, to=3-4]
+	\arrow[no head, from=2-3, to=2-2]
+	\arrow[no head, from=1-3, to=3-4]
+	\arrow[no head, from=1-4, to=3-3]
+\end{tikzcd}\]
+ \qed
+
+\problem 1.3.17: Let $G$ be a graph with at least two vertices. Prove or disprove:
+\begin{subproblems}
+\item Deleting a vertex of degree $\Delta (G)$ cannot increase average degree.
+\item Deleting a vertex of degree $\delta (G)$ cannot reduce average degree.
+\end{subproblems}
+\subsol
+True. Let $G$ be an $n$ vertex graph with degree sequence in nonincreasing order $d_\Delta ,..., d_{n-1}, d_\delta$. Since $2e(G)/n(G)\le\Delta (G)=d_\Delta$, we have:
+\begin{align*}
+\frac{2e(G)}{n(G)}&\le \Delta (G)\\
+\frac{2(d_\Delta ,..., d_{n-1}, d_\delta)}{n}&\le d_\Delta\\
+2(d_\Delta ,..., d_{n-1}, d_\delta)&\le d_\Delta n\\
+2(d_\Delta ,..., d_{n-1}, d_\delta)&\le 2d_\Delta n\\
+2(d_\Delta ,..., d_{n-1}, d_\delta)-2d_\Delta n&\le 0\\
+(2d_2n+...+2d_\delta n)-(2d_2n+...+2d_\delta n)-2d_\Delta n+2(d_\Delta ,..., d_{n-1}, d_\delta)&\le 0\\
+\frac{2n(d_2+...+d_\delta)-2(n-1)(d_\Delta +d_2+...+d_\delta)}{(n)(n-1)}&\le 0\\
+\frac{2(d_2+...+d_\delta)}{n-1}&\le\frac{2(d_\Delta +d_2+...+d_\delta)}{n}\\
+\frac{e(G-\Delta (G)}{n(G-\Delta (G))}&\le \frac{2e(G)}{n(G)}
+\end{align*}
+as desired. \qed
+\subsol
+True. We use a similar argument. Let $G$ be an $n$ vertex graph with degree sequence in nonincreasing order $d_\Delta ,..., d_{n-1}, d_\delta$. Since $d_\delta=\delta(G)\le 2e(G)/n(G)$, we have:
+\begin{align*}
+\frac{2e(G)}{n(G)}&\ge \delta (G)\\
+\frac{2(d_\Delta ,..., d_{n-1}, d_\delta)}{n}&\ge d_\delta\\
+2(d_\Delta ,..., d_{n-1}, d_\delta)&\ge d_\delta n\\
+2(d_\Delta ,..., d_{n-1}, d_\delta)&\ge 2d_\delta n\\
+2(d_\Delta ,..., d_{n-1}, d_\delta)-2d_\delta n&\ge 0\\
+(2d_\Delta n+...+2d_{n-1} n)-(2d_\Delta n+...+2d_{n-1} n)-2d_\delta n+2(d_\Delta ,..., d_{n-1}, d_\delta)&\ge 0\\
+\frac{2n(d_\Delta +...+d_{n-1})-2(n-1)(d_\Delta +d_2+...+d_\delta)}{(n)(n-1)}&\ge 0\\
+\frac{2(d_\Delta n+...+d_{n-1})}{n-1}&\ge\frac{2(d_\Delta +...+d_{n-1}+d_\delta)}{n}\\
+\frac{e(G-\delta (G)}{n(G-\delta (G))}&\ge \frac{e(G}{n(G)}
+\end{align*}
+as desired.
+\qed
+\problem 1.3.18. For $k\ge 2$, prove that a $k$-regular bipartite graph has no cut-edge.
+\solution
+Let $k\ge 2$. We proceed by proof by contradiction. Suppose that a, $k-$regular bipartite graph $G$ has a cut edge $uv$. Without loss of generality, we assume that $G$ is connected, since the components of $k$-regular graphs are connected. $u$ and $v$ must be in different partite sets. 
+
+\end{problems}
+\end{document}

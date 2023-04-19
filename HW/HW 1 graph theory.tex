@@ -1,0 +1,361 @@
+\documentclass[12pt]{article}
+
+\usepackage{amssymb,amsmath,amsthm}
+\usepackage[top=1in, bottom=1in, left=1.25in, right=1.25in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{enumerate}
+\usepackage{color}
+\usepackage{quiver}
+\usepackage{blkarray}
+\usepackage{subcaption}
+%% Import a package useful for displaying graphics.
+\usepackage{graphicx}
+
+% Comment the following line to use TeX's default font of Computer Modern.
+\usepackage{times,txfonts}
+
+% Adjust line spacing an indentation
+\parindent 0pt
+\parskip 6pt plus 1pt
+
+\newtheoremstyle{ex215}% name of the style to be used
+  {18pt}% measure of space to leave above the theorem. E.g.: 3pt
+  {12pt}% measure of space to leave below the theorem. E.g.: 3pt
+  {}% name of font to use in the body of the theorem
+  {}% measure of space to indent
+  {\bfseries}% name of head font
+  {:}% punctuation between head and body
+  {2ex}% space after theorem head; " " = normal interword space
+  {}% Manually specify head
+\theoremstyle{ex215} 
+
+\makeatletter
+\newtheorem*{lemmacore}{Lemma \@currentlabel}
+\newenvironment{lemma}[1]
+{\def\@currentlabel{#1}\lemmacore}
+{\endlemmacore}
+
+\newtheorem*{corollarycore}{Corollary \@currentlabel}
+\newenvironment{corollary}[1]
+{\def\@currentlabel{#1}\corollarycore}
+{\endcorollarycore}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Stuff for getting the name/document date/title across the header
+\RequirePackage{fancyhdr}
+\pagestyle{fancy}
+\fancyfoot[C]{\ifnum \value{page} > 1\relax\thepage\fi}
+\fancyhead[L]{\ifx\@doclabel\@empty\else\@doclabel\fi}
+\fancyhead[C]{\ifx\@docauthor\@empty\else\@docdate\fi}
+\fancyhead[R]{\ifx\@docauthor\@empty\@docdate\else\@docauthor\fi}
+\headheight 15pt
+
+
+\def\doclabel#1{\gdef\@doclabel{#1}}
+\doclabel{Use {\tt\textbackslash doclabel\{MY LABEL\}}.}
+\def\docdate#1{\gdef\@docdate{#1}}
+\docdate{Use {\tt\textbackslash docdate\{MY DATE\}}.}
+\def\docauthor#1{\gdef\@docauthor{#1}}
+%\docauthor{Use {\tt\textbackslash docauthor\{MY NAME\}}.}
+\let\@docauthor\@empty
+
+\newcounter{probcount}
+\newcounter{subprobcount}
+\newlength\probsep
+\newlength\pshrinking
+\newif\iffirstprob
+
+% The following commands allow for a handy override of labels in an enumeration,
+% without having the user keep track of what level the enumeration is happening at.
+% To use them, just put \listlabel{....} as the first command after a \begin{enumerate}.
+% The '....' is used to define the label.  You can access the name of the current label
+% counter with \thelistlabel.  Hence \listlabel{\textbf{\Alph{\thelistlabel}:}} would
+% generate lists with bold labels A:, B:, C:, etc.
+\newcommand{\listlabel}[1]{\def\thelistlabel{\@enumctr}%
+            \expandafter\def\csname label\@enumctr\endcsname{#1}}
+
+
+\newenvironment{subproblems}%
+  {\begin{enumerate}\listlabel{\alph{\thelistlabel})}%
+  %% Make the enumerate environment think we are making a list in a list:
+  \global \@newlistfalse}%
+  {\end{enumerate}}%
+
+\newenvironment{problems}%
+  {\ifhmode\unskip\par\fi\setcounter{probcount}{0}\probsep\parskip
+  \sbox\@tempboxa{\textbf{9.}}\pshrinking\wd\@tempboxa\advance\pshrinking\labelsep
+  \advance\linewidth -\pshrinking
+  \advance\@totalleftmargin\pshrinking
+  \advance\leftskip\pshrinking}%
+  {\ifhmode\unskip \par\fi\advance\leftskip-\pshrinking}%
+
+\newcommand{\problem}{%
+  \setcounter{subprobcount}{0}%
+  \stepcounter{probcount}%
+  \def\@currentlabel{\arabic{probcount}}%
+  \ifhmode
+    \unskip \par
+  \fi
+%  \addpenalty{-4000}%
+  \iffirstprob\else\addvspace\probsep\fi
+  \firstprobfalse
+  \hskip -\labelwidth\hskip -\labelsep 
+  \hbox to\labelwidth{\hss\textbf{\arabic{probcount}.}}\hskip\labelsep
+}%
+
+%% The localhead command puts a label on top of a paragraph -- handy for labels
+%% like "Solution:"
+\newskip\restoreparskip
+\newcommand{\localhead}[1]{\par\smallskip\textbf{#1}\nobreak\\}%
+%% The following arcane code was added to make the localhead enviroment get along
+%% with the ams theorem enviroment (which is based on the latex list enviroment).
+%% previously, the command was {\par\smallskip\textbf{#1}\\}, but the list
+%% enviroment would also add a par at the end of this paragraph, which would result
+%% in an extra blank line.  Our solution now is to put in our own par, but with
+%% none of the parskip glue that adds extra space between paragraphs.
+%%  \restoreparskip\parskip\parskip 0pt\par\nobreak\noindent\parskip\restoreparskip}%
+\newcommand\solution{\localhead{Solution:}}
+\newcommand\subsol{\stepcounter{subprobcount}\localhead{Solution, part \alph{subprobcount}:}}
+\newcommand\subsoleg[1]{\stepcounter{subprobcount}\par\textbf{Solution, part \alph{subprobcount}:} #1\\}
+\def\solver#1{(Solution by #1)\\\vskip-12pt}
+
+
+%% The default 'article' class has captions that label figures Figure 1, etc.  This is too 
+%% formal for homework sets, so we change \caption so that it just puts the caption text.
+%% Here I have just modified the \@makecaption command from the article class.
+%% Maybe I should change this in the future to let authors decide whether or not to label a figure.
+
+\long\def\@makecaption#1#2{%
+  \vskip\abovecaptionskip
+  \sbox\@tempboxa{#2}%
+  \ifdim \wd\@tempboxa >\hsize
+    #2\par
+  \else
+    \global \@minipagefalse
+    \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
+  \fi
+  \vskip\belowcaptionskip}
+
+%% The default implementation of the proof environment starts a new paragraph at the start of the proof,
+%% with the full parskip spacing. This only looks good following a theorem statement 
+%% if \parskip is set to zero.  We've got a medium sized parskip, so we overide this 
+%% questionable decision.
+\renewenvironment{proof}[1][\proofname]{\par
+  \pushQED{\qed}%
+  \normalfont \topsep6\p@\@plus6\p@\relax
+  \trivlist
+  \@topsep \topsep
+  \item[\hskip\labelsep
+        \itshape
+    #1\@addpunct{.}]\ignorespaces
+}{%
+  \popQED\endtrivlist\@endpefalse
+}
+\makeatother
+
+% Shortcuts for blackboard bold number sets (reals, integers, etc.)
+\newcommand{\Reals}{\ensuremath{\mathbb R}}
+\newcommand{\Nats}{\ensuremath{\mathbb N}}
+\newcommand{\Ints}{\ensuremath{\mathbb Z}}
+\newcommand{\Rats}{\ensuremath{\mathbb Q}}
+\newcommand{\Cplx}{\ensuremath{\mathbb C}}
+%% Some equivalents that some people may prefer.
+\let\RR\Reals
+\let\NN\Nats
+\let\II\Ints
+\let\CC\Cplx
+
+
+% The following commands set up the material that appears
+% in the header.
+\doclabel{Math 663: Homework 1}
+\docauthor{Glen Woodworth}
+\docdate{31 August 2021}
+
+\begin{document}
+\begin{problems}
+
+\problem 1.1.10: Prove or disprove: The complement of a simple disconnected graph must be connected.
+
+\solution 
+False. Let $G$ be the simple disconnected graph shown below:
+% https://q.uiver.app/?q=WzAsMyxbMiwxLCJcXGJ1bGxldCJdLFsxLDAsIlxcYnVsbGV0Il0sWzAsMSwiXFxidWxsZXQiXSxbMSwyLCIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV1d
+\[\begin{tikzcd}
+	& \bullet \\
+	\bullet && \bullet
+	\arrow[no head, from=1-2, to=2-1]
+\end{tikzcd}\]
+Then $\bar G$ is:
+% https://q.uiver.app/?q=WzAsMyxbMiwxLCJcXGJ1bGxldCJdLFsxLDAsIlxcYnVsbGV0Il0sWzAsMSwiXFxidWxsZXQiXSxbMSwwLCIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzAsMiwiIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dXQ==
+\[\begin{tikzcd}
+	& \bullet \\
+	\bullet && \bullet
+	\arrow[no head, from=1-2, to=2-3]
+	\arrow[no head, from=2-3, to=2-1]
+\end{tikzcd}\]
+Since each pair of vertices in $\bar G$ does not belong to a path, $\bar G$ is disconnected.\qed
+\problem 1.1.11: Determine the maximum size of a clique and the maximum size of an independent set in the graph below
+% https://q.uiver.app/?q=WzAsNixbMSwxLCJcXGJ1bGxldCJdLFszLDAsIlxcYnVsbGV0Il0sWzAsMSwiXFxidWxsZXQiXSxbMiwxLCJcXGJ1bGxldCJdLFszLDEsIlxcYnVsbGV0Il0sWzMsMiwiXFxidWxsZXQiXSxbMSwwLCIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzAsMiwiIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFsxLDQsIiIsMix7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMyw0LCIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzMsMCwiIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFsyLDEsIiIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMywxLCIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzUsNCwiIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs1LDMsIiIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbNSwwLCIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzUsMiwiIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs1LDEsIiIsMCx7ImN1cnZlIjo1LCJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV1d
+\[\begin{tikzcd}
+	&&& \bullet \\
+	\bullet & \bullet & \bullet & \bullet \\
+	&&& \bullet
+	\arrow[no head, from=1-4, to=2-2]
+	\arrow[no head, from=2-2, to=2-1]
+	\arrow[no head, from=1-4, to=2-4]
+	\arrow[no head, from=2-3, to=2-4]
+	\arrow[no head, from=2-3, to=2-2]
+	\arrow[no head, from=2-1, to=1-4]
+	\arrow[no head, from=2-3, to=1-4]
+	\arrow[no head, from=3-4, to=2-4]
+	\arrow[no head, from=3-4, to=2-3]
+	\arrow[no head, from=3-4, to=2-2]
+	\arrow[no head, from=3-4, to=2-1]
+	\arrow[curve={height=30pt}, no head, from=3-4, to=1-4]
+\end{tikzcd}\]
+\solution 
+The graph above has 6 vertices. Two of these vertices (the one above and the one below) are pairwise adjacent to every other vertex. Therefore, the maximum size of a clique (a set containing only pairwise adjacent vertices) for the above graph is 2. Furthermore, the maximum size of an independent set for the above graph must be 4, since the 4 remaining vertices are not pairwise adjacent with every other vertex.\qed
+
+\problem 1.1.12: Determine whether the Petersen graph is bipartite, and find the size of its largest independent set. 
+
+\solution
+Suppose we use $[5]=[1,2,3,4,5]$ as the 5-element set to construct a Peterson graph, $P$. Then, $V(P)=(12,13,14,15,23,24,25,34,35,45)$. Elements of $V(P)$ that are disjoint (i.e. that do not share a $1, 2, 3, 4,$ or $5$) are adjacent in $P$, otherwise they are nonadjacent. There is a 5-cycle in $P$. One such 5-cycle in $P$ is the ordered set of vertices ${A=(12,34,15,23,45)}$. It is not possible to partition a 5-cycle into two independent sets of vertices. Therefore, since $A$ is a subgraph of $P$, $P$ cannot be partitioned into two independent sets of vertices either. Thus, the Peterson graph is not bipartite. The largest independent sets of $P$ are: $(12,13,14,15), (12,23,24,25), (13,23,34,35),$ $(14,24,34,45), (15,25,35,45)$. The size of its largest independent set is 4, since for every vertex $v$ in $P$ there is at most three other vertices that are nonadjacent to $v$.\qed
+\pagebreak
+\problem 1.1.18: Determine which pairs of graphs above are isomorphic.\begin{figure}
+\begin{subfigure}{.5\textwidth}
+% https://q.uiver.app/?q=WzAsOCxbMCwxLCJ1XFwgXFxidWxsZXQiXSxbMCwyLCJ0XFwgXFxidWxsZXQiXSxbMCwzLCJzXFwgXFxidWxsZXQiXSxbMiwzLCJcXGJ1bGxldFxcIHciXSxbMiwyLCJcXGJ1bGxldFxcIHgiXSxbMiwxLCJcXGJ1bGxldFxcIHkiXSxbMiwwLCJcXGJ1bGxldFxcIHoiXSxbMCwwLCJ2XFwgXFxidWxsZXQiXSxbNyw1LCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzAsNiwiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs3LDMsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbNyw0LCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzIsNiwiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFsxLDYsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMSw1LCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzAsNCwiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFswLDMsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMiw1LCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzIsNCwiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFsxLDMsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XV0=
+\[\begin{tikzcd}
+	{v\ \bullet} && {\bullet\ z} \\
+	{u\ \bullet} && {\bullet\ y} \\
+	{t\ \bullet} && {\bullet\ x} \\
+	{s\ \bullet} && {\bullet\ w}
+	\arrow[no head, from=1-1, to=2-3]
+	\arrow[no head, from=2-1, to=1-3]
+	\arrow[no head, from=1-1, to=4-3]
+	\arrow[no head, from=1-1, to=3-3]
+	\arrow[no head, from=4-1, to=1-3]
+	\arrow[no head, from=3-1, to=1-3]
+	\arrow[no head, from=3-1, to=2-3]
+	\arrow[no head, from=2-1, to=3-3]
+	\arrow[no head, from=2-1, to=4-3]
+	\arrow[no head, from=4-1, to=2-3]
+	\arrow[no head, from=4-1, to=3-3]
+	\arrow[no head, from=3-1, to=4-3]
+\end{tikzcd}\]
+\caption{$A$}
+\end{subfigure}
+% https://q.uiver.app/?q=WzAsOCxbMCwwLCJkXFwgXFxidWxsZXQiXSxbMywwLCJcXGJ1bGxldFxcIGMiXSxbMSwxLCJoXFwgXFxidWxsZXQiXSxbMiwxLCJcXGJ1bGxldFxcIGciXSxbMCwzLCJhXFwgXFxidWxsZXQiXSxbMywzLCJcXGJ1bGxldFxcIGIiXSxbMiwyLCJcXGJ1bGxldFxcIGYiXSxbMSwyLCJlXFwgXFxidWxsZXQiXSxbMCwxLCIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzMsMSwiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFszLDIsIiIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMiwwLCIiLDAseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzEsNSwiIiwwLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFszLDYsIiIsMix7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMiw3LCIiLDIseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzcsNiwiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFswLDQsIiIsMCx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbNyw0LCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzQsNSwiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs2LDUsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XV0=
+\begin{subfigure}{.5\textwidth}
+\[\begin{tikzcd}
+	{d\ \bullet} &&& {\bullet\ c} \\
+	& {h\ \bullet} & {\bullet\ g} \\
+	& {e\ \bullet} & {\bullet\ f} \\
+	{a\ \bullet} &&& {\bullet\ b}
+	\arrow[no head, from=1-1, to=1-4]
+	\arrow[no head, from=2-3, to=1-4]
+	\arrow[no head, from=2-3, to=2-2]
+	\arrow[no head, from=2-2, to=1-1]
+	\arrow[no head, from=1-4, to=4-4]
+	\arrow[no head, from=2-3, to=3-3]
+	\arrow[no head, from=2-2, to=3-2]
+	\arrow[no head, from=3-2, to=3-3]
+	\arrow[no head, from=1-1, to=4-1]
+	\arrow[no head, from=3-2, to=4-1]
+	\arrow[no head, from=4-1, to=4-4]
+	\arrow[no head, from=3-3, to=4-4]
+\end{tikzcd}\]
+ \caption{$B$}
+\end{subfigure}
+% https://q.uiver.app/?q=WzAsOCxbMSwwLCJcXHRoZXRhXFwgXFxidWxsZXQiXSxbMCwxLCJcXGV0YVxcIFxcYnVsbGV0Il0sWzAsMiwiXFx6ZXRhXFwgXFxidWxsZXQiXSxbMSwzLCJcXGVwc2lsb25cXCBcXGJ1bGxldCJdLFsyLDMsIlxcYnVsbGV0XFwgXFxkZWx0YSJdLFszLDIsIlxcYnVsbGV0XFwgXFxnYW1tYSJdLFszLDEsIlxcYnVsbGV0XFwgXFxiZXRhIl0sWzIsMCwiXFxidWxsZXRcXCBcXGFscGhhIl0sWzAsNywiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFswLDEsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMSwyLCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzIsMywiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFszLDQsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbNCw1LCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzUsNiwiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs2LDcsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMSw1LCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzMsNywiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs0LDAsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbNiwyLCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV1d
+\begin{subfigure}{.5\textwidth}
+\[\begin{tikzcd}
+	& {\theta\ \bullet} & {\bullet\ \alpha} \\
+	{\eta\ \bullet} &&& {\bullet\ \beta} \\
+	{\zeta\ \bullet} &&& {\bullet\ \gamma} \\
+	& {\epsilon\ \bullet} & {\bullet\ \delta}
+	\arrow[no head, from=1-2, to=1-3]
+	\arrow[no head, from=1-2, to=2-1]
+	\arrow[no head, from=2-1, to=3-1]
+	\arrow[no head, from=3-1, to=4-2]
+	\arrow[no head, from=4-2, to=4-3]
+	\arrow[no head, from=4-3, to=3-4]
+	\arrow[no head, from=3-4, to=2-4]
+	\arrow[no head, from=2-4, to=1-3]
+	\arrow[no head, from=2-1, to=3-4]
+	\arrow[no head, from=4-2, to=1-3]
+	\arrow[no head, from=4-3, to=1-2]
+	\arrow[no head, from=2-4, to=3-1]
+\end{tikzcd}\]
+ \caption{$C$}
+\end{subfigure}
+\end{figure}
+\solution
+$A$ can be partitioned into two disjoint sets, whereas $C$ cannot. Therefore, $A$ is not isomorphic to $C$. A bijection $f:V(A)\rightarrow{V(B)}$ exists. It can be defined as follows:$(r,f(r))=[(s,a),(y,b),(t,c),(z,d),(x,e),(v,f),(w,g),(u,h)]$ for $r\;\epsilon\;V(A)$ and $f(r)\;\epsilon\;V(B)$. Thus, $A\cong B$ $\qed$.
+\problem 1.2.1: Determine whether the statements below are true or false.
+\begin{subproblems}
+\item Every disconnected graph has an isolated vertex.
+\item A graph is connected if and only if some vertex is connected to all other vertices.
+\item The edge set of every closed trail can be partitioned into edge sets of cycles.
+\item If a maximal trail in a graph is not closed, then its endpoints have odd degree.
+\end{subproblems}
+
+\subsol
+False. See graph below.
+% https://q.uiver.app/?q=WzAsNCxbMCwxLCJcXGJ1bGxldCJdLFswLDAsIlxcYnVsbGV0Il0sWzEsMCwiXFxidWxsZXQiXSxbMSwxLCJcXGJ1bGxldCJdLFsxLDAsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMywyLCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV1d
+\[\begin{tikzcd}
+	\bullet & \bullet \\
+	\bullet & \bullet
+	\arrow[no head, from=1-1, to=2-1]
+	\arrow[no head, from=2-2, to=1-2]
+\end{tikzcd}\]\qed
+\subsol
+True. The implication is trivial, as it follows from the definition of connected (1.2.6). Now, the converse. Assume some vertex $g$ in a graph $G$ is connected to all other vertices of $G$. From the definition of connected, for every $u,v\;\epsilon\; V(G)$ there is a $g,u$-path and a $g,v$-path. Contained in these paths is a $u,v$-path. Thus, there is a $u,v$-path for every $u,v$-pair in $G$, which means $G$ is connected, as desired.\qed
+\subsol
+True. Since every closed trail has vertices that have even degrees, every closed trail will be an even graph. Proposition 1.2.27 states that every even graph decomposes into cycles. Thus, every closed trail can be partitioned into edge sets of cycles. \qed
+\subsol
+True. Since the trail is not closed, the endpoints are not the same. Therefore, the endpoints of the trail must have odd degree. If they were even, there would be some extra edge on either endpoint that the trail could continue on. But we assumed the trail is maximal, so there must not be an extra edge, and the degree of the endpoints must have odd degree.\qed
+\problem 1.2.2: Determine whether $K_4$ contains the following (give an example or a proof of non-existence).
+\begin{subproblems}
+\item A walk that is not a trail.
+\item A trail that is not closed and is not a path.
+\item A closed trail that is not a cycle.
+\end{subproblems}
+
+\subsol
+Possible. Traverse from one vertex to another, then back to the first vertex.
+\subsol
+Possible. Traverse a cycle, then one extra edge. (see graph below)
+% https://q.uiver.app/?q=WzAsNCxbMCwxLCJcXGJ1bGxldCJdLFsxLDAsIlxcYnVsbGV0Il0sWzEsMSwiXFxidWxsZXQiXSxbMCwwLCJcXGJ1bGxldCJdLFswLDIsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMiwxLCIiLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzAsMSwiIiwxLHsic3R5bGUiOnsiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFsxLDMsIiIsMSx7InN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XV0=
+\[\begin{tikzcd}
+	\bullet & \bullet \\
+	\bullet & \bullet
+	\arrow[no head, from=2-1, to=2-2]
+	\arrow[no head, from=2-2, to=1-2]
+	\arrow[no head, from=2-1, to=1-2]
+	\arrow[no head, from=1-2, to=1-1]
+\end{tikzcd}\]
+\subsol
+Not possible. The vertices of $K_4$ all have degree 3. In order to have a closed trail that is not a cycle, we would need vertices in $K_4$ that have degree 4, so that a vertex can be entered and exited two times each to eliminate the possibility of it being a cycle but remain a trail by ending on the same vertex that it started at. (Note: Used as a reference $http://web.math.ucsb.edu/~adeboye/137A_II/Midterm-Solutions\%t20copy.pdf$)
+
+
+\problem 1.2.13: \textit{Alternative proofs that every u,v-walk contains a u,v-path (Lemma 1.2.5).}
+\begin{subproblems}
+\item (ordinary induction) Given that every walk of length $l-1$ contains a path from its first vertex to its last, prove that every walk of length $l$ also satisfies this.
+\item (extremality) Given a $u, v$-walk $W$, consider a shortest $u, v$-walk contained in $W$.
+\end{subproblems}
+
+\subsol
+Suppose $W$ is a $u,v$-walk of length $l$. Now suppose $v'$ is the last vertex before the walk ends at $v$. Then suppose $W'$ is a $u,v'$-walk, not containing v, of length $l-1$. By the inductive hypothesis, there is a $u,v'$-path. But since $v'$ is adjacent to $v$, there must be a $v,v'$-path of length 1. Therefore, there is a $u,v$-path of length $l$.\qed
+\subsol
+Suppose $W$ is a $u,v$-walk and $W'$ is the shortest $u,v$-walk contained in $W$. $W'$ must not repeat vertices, otherwise we could remove the repeated vertices and make it shorter. This means $W'$ is a $u,v$-path. Therefore, $W'$ contains a $u,v$-path.\qed
+\problem 1.2.15: Let $W$ be a closed walk of length at least 1 that does not contain a cycle. Prove that some edge of $W$ repeats immediately (once in each direction).
+
+\solution
+We proceed using proof by induction on the length $l$ of walk $W$. First, the base case. Since $W$ does not contain a cycle, $W$ is not a loop, so $l\ge 2$. Suppose $W$ is a closed walk of length 2.  Therefore, $W: (x,e,y,e,x)$, where $x$ and $y$ are vertices and $e$ is an edge. This is an immediate repeat, as desired. 
+
+Inductive step: Assume the hypothesis true for $l'$ such that $2<l'<l\;\epsilon\;\Nats$. We must show that it holds for length $l$. Suppose $W:v_1...v_{l-1}, v_1$ is a closed walk of length $l$ that does not contain a cycle. Its endpoints cannot be the only vertices that are traversed twice, otherwise it would be a cycle. Therefore, it must traverse some other vertices at least twice. Consider a closed subwalk of $W$ without a cycle, $W':v_1...v_{k-1}, v_1$ with length $k$, where $k<l$ and where the vertices correspond to those vertices that $W$ traverses twice. This ensures that there is no way for $W$ to skip over $W'$ because if $W$ skipped these vertices, it would be a cycle, which is a contradiction. By the inductive hypothesis, $W'$ contains an edge that immediately repeats. Therefore, since $W'$ is contained in $W$, $W$ contains an edge that immediately repeats, as desired. (Note: Viewed solution online solution after giving it my all in a .pdf of the Solutions Manual of our book)
+\qed
+\end{problems}
+\end{document}
